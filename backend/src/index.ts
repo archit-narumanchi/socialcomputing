@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRouter from './routes/auth.router';
 import courseRouter from './routes/course.router'; // <-- ADD THIS LINE
+import forumRouter from './routes/forum.router'; // <-- ADD THIS LINE
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +28,9 @@ app.use('/api/auth', authRouter);
 
 // Course routes
 app.use('/api/courses', courseRouter); // <-- ADD THIS LINE
+
+// Forum routes
+app.use('/api/forum', forumRouter); // <-- ADD THIS LINE
 
 // --- Start Server ---
 app.listen(PORT, () => {
