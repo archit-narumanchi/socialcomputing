@@ -7,22 +7,25 @@ RUN apt-get update && apt-get install -y openssl
 # 3. Set working directory
 WORKDIR /app
 
-# 4. Copy package.json and install dependencies
-# This will now ALSO run "npx prisma generate" because of our postinstall script
+# 4. Copy package.json files
 COPY package*.json ./
-RUN npm install
 
-# 5. Copy Prisma schema
+# 5. Copy Prisma schema FIRST
+# This is so the 'postinstall' script in package.json can find it
 COPY prisma ./prisma/
 
-# 6. Copy the rest of your app's source code
+# 6. Install dependencies
+# This will now ALSO run "npx prisma generate" successfully
+RUN npm install
+
+# 7. Copy the rest of your app's source code
 COPY . .
 
-# 7. Build the TypeScript code
+# 8. Build the TypeScript code
 RUN npm run build
 
-# 8. Expose the port your app will run on
+# 9. Expose the port your app will run on
 EXPOSE 8080
 
-# 9. Set the default command to run your app
+# 10. Set the default command to run your app
 CMD [ "npm", "run", "start" ]
