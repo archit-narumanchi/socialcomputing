@@ -1,0 +1,5 @@
+# These are the files we DON'T want in the container
+    node_modules
+    dist
+    .env
+    npm-debug.log*
