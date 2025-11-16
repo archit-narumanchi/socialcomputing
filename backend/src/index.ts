@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRouter from './routes/auth.router';
+import courseRouter from './routes/course.router'; // <-- ADD THIS LINE
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +24,9 @@ app.get('/api/health', (req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRouter);
+
+// Course routes
+app.use('/api/courses', courseRouter); // <-- ADD THIS LINE
 
 // --- Start Server ---
 app.listen(PORT, () => {
