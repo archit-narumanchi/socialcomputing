@@ -17,6 +17,7 @@
       username       String
       hashedPassword String
       createdAt      DateTime @default(now())
+      role           UserRole @default(USER) //
 
       // Relations
       enrollments Enrollment[]
@@ -117,4 +118,10 @@
       // Relations
       user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
       course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    }
+
+    // --- ADD THIS ENUM AT THE BOTTOM ---
+    enum UserRole {
+      USER
+      ADMIN
     }

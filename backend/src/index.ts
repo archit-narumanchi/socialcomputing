@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRouter from './routes/auth.router';
 import courseRouter from './routes/course.router'; // <-- ADD THIS LINE
 import forumRouter from './routes/forum.router'; // <-- ADD THIS LINE
+import adminRouter from './routes/admin.router'; // <-- ADD THIS LINE
 
 // Load environment variables
 dotenv.config();
@@ -31,6 +32,9 @@ app.use('/api/courses', courseRouter); // <-- ADD THIS LINE
 
 // Forum routes
 app.use('/api/forum', forumRouter); // <-- ADD THIS LINE
+
+// Admin routes
+app.use('/api/admin', adminRouter);
 
 // --- Start Server ---
 app.listen(PORT, () => {
