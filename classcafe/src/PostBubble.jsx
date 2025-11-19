@@ -52,29 +52,27 @@ export default function PostBubble({ post }) {
           <p className={styles.content}>{content}</p>
         </div>
         <footer className={styles.footer}>
-            <button
-              type="button"
-              className={`${styles.action} ${styles.likeButton} ${
-                liked ? styles.liked : ""
-              }`}
-              onClick={() => {
-                setLiked((prev) => {
-                  const next = !prev;
-                  setLikesCount((count) =>
-                    Math.max(0, count + (next ? 1 : -1))
-                  );
-                  return next;
-                });
-              }}
-              aria-pressed={liked}
-              aria-label={liked ? "Unlike post" : "Like post"}
-            >
-              <span aria-hidden="true">♡</span> {likesCount}
-            </button>
-            <span className={styles.action}>
-              <span aria-hidden="true">💬</span> {replies.length}
-            </span>
-          </footer>
+          <button
+            type="button"
+            className={`${styles.action} ${styles.likeButton} ${
+              liked ? styles.liked : ""
+            }`}
+            onClick={() => {
+              const nextLiked = !liked;
+              setLiked(nextLiked);
+              setLikesCount((count) =>
+                Math.max(0, count + (nextLiked ? 1 : -1))
+              );
+            }}
+            aria-pressed={liked}
+            aria-label={liked ? "Unlike post" : "Like post"}
+          >
+            <span aria-hidden="true">♡</span> {likesCount}
+          </button>
+          <span className={styles.action}>
+            <span aria-hidden="true">💬</span> {replies.length}
+          </span>
+        </footer>
       </div>
     </article>
   );
