@@ -1,0 +1,23 @@
+.textarea {
+  width: 100%;
+  border: 0;
+  border-radius: 28px;
+  padding: 24px;
+  min-height: 220px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  background: #c5dfbf;
+  color: #0f172a;
+  resize: vertical;
+  box-shadow: inset 0 0 0 2px rgba(17, 94, 89, 0.1);
+}
+
+.textarea:focus {
+  outline: 3px solid rgba(125, 185, 125, 0.6);
+}
+
+.textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+

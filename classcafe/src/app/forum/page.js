@@ -16,6 +16,9 @@ export default function ForumPage() {
           ))}
         </div>
       </main>
+      <Link href="/forum/compose" className={styles.composeButton}>
+        +
+      </Link>
     </div>
   );
 }

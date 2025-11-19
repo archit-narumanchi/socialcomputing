@@ -40,6 +40,25 @@
   align-items: center;
 }
 
+.composeButton {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #34d399, #059669);
+  box-shadow: 0 12px 24px rgba(5, 150, 105, 0.35);
+  color: #f8fffb;
+  font-size: 2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 @media (max-width: 640px) {
   .page {
     padding-top: 120px;
