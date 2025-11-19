@@ -1,0 +1,152 @@
+:root {
+  --surface: #f2f9ff;
+  --bubble-bg: #c5dfef;
+  --bubble-border: #b1cedf;
+  --text: #0f172a;
+  --muted: #4b5563;
+  --reply-bg: rgba(255, 255, 255, 0.65);
+}
+
+.post {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  width: min(900px, 100%);
+  background: transparent;
+}
+
+.avatarColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 96px;
+  gap: 0.4rem;
+}
+
+.avatarCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px dashed #7fb5da;
+  background: #d0e6f5;
+}
+
+.avatarLabel {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  word-break: break-word;
+}
+
+.messageColumn {
+  flex: 1;
+  position: relative;
+  padding-left: 0.75rem;
+}
+
+.thoughtDot {
+  position: absolute;
+  left: 0;
+  top: 1.4rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bubble-bg);
+  border: 1px solid var(--bubble-border);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+}
+
+.bubble {
+  background: var(--bubble-bg);
+  border-radius: 999px;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--bubble-border);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.timestamp {
+  font-style: italic;
+}
+
+.content {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 1rem;
+}
+
+.footer {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  margin-left: 1rem;
+}
+
+.action {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.likeButton {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.likeButton:focus-visible {
+  outline: 2px solid #0f6ad4;
+  border-radius: 0.25rem;
+  padding-inline: 0.2rem;
+}
+
+.liked {
+  color: #d94871;
+}
+
+@media (max-width: 640px) {
+  .post {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .messageColumn {
+    padding-left: 0;
+    width: 100%;
+  }
+
+  .thoughtDot {
+    display: none;
+  }
+
+  .bubble {
+    border-radius: 1.5rem;
+  }
+
+  .footer {
+    justify-content: center;
+  }
+}
+

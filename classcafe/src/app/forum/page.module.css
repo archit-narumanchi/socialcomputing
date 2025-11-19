@@ -1,0 +1,53 @@
+:root {
+  --background: #f6fbff;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  justify-content: center;
+  padding: 80px 24px 40px;
+  position: relative;
+}
+
+.backButton {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid #9fc5de;
+  background: #d5eaf8;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.main {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  justify-content: center;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-top: 120px;
+  }
+
+  .backButton {
+    top: 12px;
+    left: 12px;
+  }
+}
+
