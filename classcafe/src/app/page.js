@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.css";
 import AuthModal from "../components/AuthModal";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
 export default function Home() {
+  const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -16,7 +19,6 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState({});
-  const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in
@@ -151,6 +153,14 @@ export default function Home() {
     return enrolledCourses.some((course) => course.id === courseId);
   };
 
+  const handleStartClick = () => {
+    if (!isLoggedIn) {
+      setIsAuthModalOpen(true);
+    } else {
+      router.push("/forum");
+    }
+  };
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -223,6 +233,24 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className={styles.startContainer}>
+          <Image
+            src="/assets/logo_new.png"
+            alt="ClassCafe logo"
+            
+            width={640}
+            height={360}
+            className={styles.imageSizing}
+          />
+          <button
+            type="button"
+            className={styles.startButton}
+            onClick={handleStartClick}
+          >
+            {isLoggedIn ? "View Cafes" : "Start using ClassCafe"}
+          </button>
         </div>
       </main>
     </div>
