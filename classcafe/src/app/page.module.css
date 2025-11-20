@@ -101,6 +101,30 @@ a.secondary {
   width: 100%;
 }
 
+.header {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.loginButton,
+.logoutButton {
+  padding: 10px 20px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 8px;
+  background: var(--foreground);
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.loginButton:hover,
+.logoutButton:hover {
+  background: var(--button-secondary-hover);
+}
+
 .forumButton {
   margin-top: 2rem;
   width: 80px;
@@ -114,6 +138,11 @@ a.secondary {
   color: #333;
   font-weight: 600;
   background: transparent;
+  transition: border-color 0.2s;
+}
+
+.forumButton:hover {
+  border-color: #888;
 }
 
 /* Enable hover only on non-touch devices */
