@@ -8,15 +8,28 @@ import styles from "./page.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
+const decodeTokenPayload = (token) => {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return null;
+    return JSON.parse(atob(payload));
+  } catch (error) {
+    console.warn("Failed to decode token payload", error);
+    return null;
+  }
+};
+
 export default function ForumPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [course, setCourse] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = searchParams.get("courseId");
+  const courseIdNumber = courseId ? Number(courseId) : null;
 
   useEffect(() => {
     // Check if user is logged in
@@ -26,19 +39,31 @@ export default function ForumPage() {
       return;
     }
 
-    if (!courseId) {
+    if (!courseIdNumber) {
       router.push("/");
       return;
     }
 
-    setIsAuthenticated(true);
-    fetchCourseInfo();
-    fetchPosts();
-  }, [router, courseId]);
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setCurrentUserId(Number(storedUserId));
+    } else {
+      const payload = decodeTokenPayload(token);
+      if (payload?.userId) {
+        setCurrentUserId(payload.userId);
+        localStorage.setItem("userId", String(payload.userId));
+      }
+    }
 
-  const fetchCourseInfo = async () => {
+    setIsAuthenticated(true);
+    setIsLoading(true);
+        fetchCourseInfo(token);
+        fetchPosts(token);
+  }, [router, courseIdNumber]);
+
+  const fetchCourseInfo = async (tokenFromEffect) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = tokenFromEffect || localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/courses/my`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -47,9 +72,7 @@ export default function ForumPage() {
 
       if (response.ok) {
         const courses = await response.json();
-        const foundCourse = courses.find(
-          (c) => c.id === parseInt(courseId)
-        );
+        const foundCourse = courses.find((c) => c.id === courseIdNumber);
         if (foundCourse) {
           setCourse(foundCourse);
         } else {
@@ -64,9 +87,10 @@ export default function ForumPage() {
     }
   };
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (tokenFromEffect) => {
+    setIsLoadingPosts(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = tokenFromEffect || localStorage.getItem("token");
       const response = await fetch(
         `${API_BASE_URL}/forum/course/${courseId}/posts`,
         {
@@ -126,7 +150,13 @@ export default function ForumPage() {
           ) : posts.length === 0 ? (
             <div className={styles.noPosts}>No posts yet. Be the first to post!</div>
           ) : (
-            posts.map((post) => <PostBubble key={post.id} post={post} />)
+            posts.map((post) => (
+              <PostBubble
+                key={post.id}
+                post={post}
+                currentUserId={currentUserId}
+              />
+            ))
           )}
         </div>
       </main>

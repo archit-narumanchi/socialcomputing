@@ -20,7 +20,7 @@ const formatTimestamp = (value) => {
  * A compact, chat-inspired view of a forum `Post`.
  * Mirrors the Prisma Post schema (id, user, course, content, likes, replies, etc.)
  */
-export default function PostBubble({ post }) {
+export default function PostBubble({ post, currentUserId = null }) {
   if (!post) {
     return null;
   }
@@ -32,10 +32,27 @@ export default function PostBubble({ post }) {
   const [likesCount, setLikesCount] = useState(initialLikeCount);
   const [liked, setLiked] = useState(false);
 
-  const displayName = user?.username || user?.email || "Anonymous";
+  const replyCount = Array.isArray(replies)
+    ? replies.length
+    : Number(replies) || 0;
+
+  const numericCurrentUserId =
+    currentUserId !== null ? Number(currentUserId) : null;
+  const postAuthorId =
+    user?.id !== undefined && user?.id !== null ? Number(user.id) : null;
+  const isOwnPost =
+    numericCurrentUserId !== null &&
+    postAuthorId !== null &&
+    numericCurrentUserId === postAuthorId;
+
+  const displayName = isOwnPost
+    ? "You"
+    : user?.username || user?.email || "Anonymous";
+
+  const postClassName = `${styles.post} ${isOwnPost ? styles.postOwn : ""}`;
 
   return (
-    <article className={styles.post} data-post-id={id}>
+    <article className={postClassName} data-post-id={id}>
       <div className={styles.avatarColumn}>
         <div className={styles.avatarCircle} aria-hidden="true" />
         <span className={styles.avatarLabel}>{displayName}</span>
@@ -70,7 +87,7 @@ export default function PostBubble({ post }) {
             <span aria-hidden="true">♡</span> {likesCount}
           </button>
           <span className={styles.action}>
-            <span aria-hidden="true">💬</span> {replies.length}
+            <span aria-hidden="true">💬</span> {replyCount}
           </span>
         </footer>
       </div>

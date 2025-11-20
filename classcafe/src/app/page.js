@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.css";
 import AuthModal from "../components/AuthModal";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
@@ -54,6 +53,8 @@ export default function Home() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail");
     setIsLoggedIn(false);
     setEnrolledCourses([]);
     setSearchResults([]);
@@ -127,18 +128,43 @@ export default function Home() {
     router.push(`/forum?courseId=${courseId}`);
   };
 
+  const handleStartClick = () => {
+    if (!isLoggedIn) {
+      setIsAuthModalOpen(true);
+    } else {
+      router.push("/forum");
+    }
+  };
+
   // If not logged in, show only login modal
   if (!isLoggedIn) {
     return (
       <div className={styles.page}>
-        <main className={styles.main}>
+        <div className={styles.startContainer}>
+          <Image
+            src="/assets/logo_new.png"
+            alt="ClassCafe logo"
+            
+            width={640}
+            height={360}
+            className={styles.imageSizing}
+          />
+          <button
+            type="button"
+            className={styles.startButton}
+            onClick={handleStartClick}
+          >
+            {isLoggedIn ? "View Cafes" : "Start using ClassCafe"}
+          </button>
+        </div>
+        {/* <main className={styles.main}>
           <button
             onClick={() => setIsAuthModalOpen(true)}
             className={styles.loginButton}
           >
             Login / Register
           </button>
-        </main>
+        </main> */}
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
@@ -151,14 +177,6 @@ export default function Home() {
   // Check if course is enrolled
   const isEnrolled = (courseId) => {
     return enrolledCourses.some((course) => course.id === courseId);
-  };
-
-  const handleStartClick = () => {
-    if (!isLoggedIn) {
-      setIsAuthModalOpen(true);
-    } else {
-      router.push("/forum");
-    }
   };
 
   return (
@@ -233,24 +251,6 @@ export default function Home() {
               ))}
             </div>
           )}
-        </div>
-
-        <div className={styles.startContainer}>
-          <Image
-            src="/assets/logo_new.png"
-            alt="ClassCafe logo"
-            
-            width={640}
-            height={360}
-            className={styles.imageSizing}
-          />
-          <button
-            type="button"
-            className={styles.startButton}
-            onClick={handleStartClick}
-          >
-            {isLoggedIn ? "View Cafes" : "Start using ClassCafe"}
-          </button>
         </div>
       </main>
     </div>

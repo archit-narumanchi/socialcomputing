@@ -5,6 +5,19 @@ import styles from "./AuthModal.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
+const decodeTokenPayload = (token) => {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) {
+      return null;
+    }
+    return JSON.parse(atob(payload));
+  } catch (error) {
+    console.warn("Failed to decode token payload", error);
+    return null;
+  }
+};
+
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -53,6 +66,15 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       // Store token in localStorage
       if (data.token) {
         localStorage.setItem("token", data.token);
+
+        const payload = decodeTokenPayload(data.token);
+        if (payload?.userId) {
+          localStorage.setItem("userId", String(payload.userId));
+        }
+        if (payload?.email) {
+          localStorage.setItem("userEmail", payload.email);
+        }
+
         onLoginSuccess();
         onClose();
         // Reset form
