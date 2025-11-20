@@ -1,5 +1,5 @@
 .page {
-  --background: #fafafa;
+  --background: #fefefe;
   --foreground: #fff;
 
   --text-primary: #000;
@@ -330,13 +330,13 @@ a.secondary {
   }
 
   .page {
-    --background: #1d150f;
-    --foreground: #1d150f;
+    --background: #ececec;
+    --foreground: #ececec;
 
-    --text-primary: #ededed;
+    --text-primary: #1d150f;
     --text-secondary: #999;
 
-    --button-primary-hover: #ccc;
+    --button-primary-hover: #727272;
     --button-secondary-hover: #1a1a1a;
     --button-secondary-border: #1a1a1a;
   }
