@@ -77,13 +77,13 @@ router.post('/course/:courseId/posts', isAuthenticated, isEnrolled, async (req: 
   }
 });
 
-// --- Reply to a post ---
-// POST /api/forum/posts/456/reply
-// Protected by: Must be logged in
+// --- Reply to a post (supports nested replies) ---
+// POST /api/forum/posts/:postId/reply
+// Body: { content: "...", parentId: 123 (optional) }
 router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
-  const { content } = req.body;
+  const { content, parentId } = req.body; // Get parentId from body
 
   if (!content) {
     return res.status(400).json({ error: 'Content is required' });
@@ -95,6 +95,7 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
         content: content,
         userId: userId,
         postId: parseInt(postId),
+        parentId: parentId ? parseInt(parentId) : null, // Link to parent reply if provided
       },
       include: {
         user: {
@@ -112,9 +113,8 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
   }
 });
 
-// --- Get all replies for a post ---
-// GET /api/forum/posts/456/replies
-// Protected by: Must be logged in
+// --- Get all replies for a post (including nested ones) ---
+// GET /api/forum/posts/:postId/replies
 router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
 
@@ -122,9 +122,10 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
     const replies = await prisma.reply.findMany({
       where: {
         postId: parseInt(postId),
+        parentId: null, // Only get top-level replies first
       },
       orderBy: {
-        createdAt: 'asc', // Show oldest replies first (like a thread)
+        createdAt: 'asc',
       },
       include: {
         user: {
@@ -133,11 +134,21 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
             username: true,
           },
         },
-         _count: {
+        _count: {
           select: {
             likes: true,
+            children: true, // Count nested replies
           },
         },
+        // Recursively fetch children (nested replies)
+        // Note: Prisma supports simple recursion, but deep recursion often needs a raw query or client-side handling.
+        // For a simple 2-level nesting, we can include children:
+        children: {
+          include: {
+            user: { select: { id: true, username: true } },
+            _count: { select: { likes: true } }
+          }
+        }
       },
     });
     res.status(200).json(replies);
