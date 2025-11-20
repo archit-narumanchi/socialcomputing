@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./AuthModal.module.css";
 
-const API_BASE_URL = "https://classcafe-backend.onrender.com" || "http://localhost:8080/api";
+const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -32,10 +32,22 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      let data;
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        // If not JSON, try to get text for error message
+        const text = await response.text();
+        throw new Error(
+          `Server returned non-JSON response (${response.status}): ${text.substring(0, 100)}`
+        );
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(data.error || `Request failed with status ${response.status}`);
       }
 
       // Store token in localStorage
@@ -51,7 +63,12 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         throw new Error("No token received");
       }
     } catch (err) {
-      setError(err.message || "An error occurred");
+      // Handle JSON parsing errors specifically
+      if (err instanceof SyntaxError) {
+        setError("Invalid response from server. Please check the API endpoint.");
+      } else {
+        setError(err.message || "An error occurred");
+      }
     } finally {
       setIsLoading(false);
     }
