@@ -5,6 +5,8 @@ import authRouter from './routes/auth.router';
 import courseRouter from './routes/course.router'; // <-- ADD THIS LINE
 import forumRouter from './routes/forum.router'; // <-- ADD THIS LINE
 import adminRouter from './routes/admin.router'; // <-- ADD THIS LINE
+import cronRouter from './routes/cron.router';
+import bulletinRouter from './routes/bulletin.router';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +20,12 @@ app.use(cors()); // Allows cross-origin requests
 app.use(express.json()); // Parses incoming JSON requests
 
 // --- API Routes ---
+
+// Cron routes
+app.use('/api/cron', cronRouter);
+
+// Bulletin routes
+app.use('/api/bulletin', bulletinRouter);
 
 // Root health check
 app.get('/api/health', (req, res) => {
