@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./AuthModal.module.css";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_BASE_URL = https://classcafe-backend.onrender.com || "http://localhost:8080/api";
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
