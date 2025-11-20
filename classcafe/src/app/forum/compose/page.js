@@ -1,12 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ThoughtTextarea from "../../../ThoughtTextarea";
 import styles from "./page.module.css";
 
 export default function ComposePostPage() {
   const [message, setMessage] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/");
+    } else {
+      setIsAuthenticated(true);
+      setIsLoading(false);
+    }
+  }, [router]);
 
   const handlePost = () => {
     if (!message.trim()) {
@@ -14,6 +29,20 @@ export default function ComposePostPage() {
     }
     alert("Posting soon! This is a placeholder while the backend is built.");
   };
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <main className={styles.main}>
+          <div>Loading...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className={styles.page}>
