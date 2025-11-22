@@ -18,6 +18,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState({});
+  const [hasSearched, setHasSearched] = useState(false); // Track if a search has been made
 
   useEffect(() => {
     // Check if user is logged in
@@ -63,6 +64,9 @@ export default function Home() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    
+    setHasSearched(true);
+
     if (!searchQuery.trim()) {
       setSearchResults([]);
       return;
@@ -230,6 +234,13 @@ export default function Home() {
           </div>
         )}
 
+        {/* No search results */}
+        {hasSearched && !isSearching && searchResults.length === 0 && (
+          <p className={styles.noResults}>
+            Course not found :( <br /> Maybe try another?
+          </p>
+        )}
+
         {/* Enrolled Courses */}
         <div className={styles.enrolledCourses}>
           <h2 className={styles.sectionTitle}>My Courses</h2>
@@ -245,8 +256,17 @@ export default function Home() {
                   onClick={() => handleCourseClick(course.id)}
                   className={styles.courseButton}
                 >
-                  <h3 className={styles.courseButtonTitle}>{course.title}</h3>
-                  <p className={styles.courseButtonCode}>{course.courseCode}</p>
+                  <div className={styles.courseButtonContent}>
+                    <Image
+                      src="/assets/cafe_default.png"
+                      alt="Course cafe"
+                      width={160}
+                      height={90}
+                      className={styles.courseImage}
+                    />
+                    <h3 className={styles.courseButtonTitle}>{course.title}</h3>
+                    <p className={styles.courseButtonCode}>{course.courseCode}</p>
+                  </div>
                 </button>
               ))}
             </div>
