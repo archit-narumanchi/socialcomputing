@@ -12,7 +12,7 @@ export default function CourseCafe() {
   };
 
   const handleCustomiseAvatar = () => {
-    console.log("Customise avatar for course:", courseCode);
+    router.push(`/cafe/${courseCode}/avatar`);
   };
 
   const handleNotifications = () => {
