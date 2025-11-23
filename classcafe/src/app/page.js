@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import AuthModal from "../components/AuthModal";
+import AuthModal from "../AuthModal";
 import Image from "next/image";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";

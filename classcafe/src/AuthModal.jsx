@@ -45,14 +45,12 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         body: JSON.stringify(body),
       });
 
-      // Check if response is JSON before parsing
       const contentType = response.headers.get("content-type");
       let data;
 
       if (contentType && contentType.includes("application/json")) {
         data = await response.json();
       } else {
-        // If not JSON, try to get text for error message
         const text = await response.text();
         throw new Error(
           `Server returned non-JSON response (${response.status}): ${text.substring(0, 100)}`
@@ -63,31 +61,42 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         throw new Error(data.error || `Request failed with status ${response.status}`);
       }
 
-      // Store token in localStorage
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      // --- LOGIC SPLIT HERE ---
+      
+      if (isLogin) {
+        // LOGIN FLOW: Expect a token
+        if (data.token) {
+          localStorage.setItem("token", data.token);
 
-        const payload = decodeTokenPayload(data.token);
-        if (payload?.userId) {
-          localStorage.setItem("userId", String(payload.userId));
-        }
-        if (payload?.email) {
-          localStorage.setItem("userEmail", payload.email);
-        }
+          const payload = decodeTokenPayload(data.token);
+          if (payload?.userId) {
+            localStorage.setItem("userId", String(payload.userId));
+          }
+          if (payload?.email) {
+            localStorage.setItem("userEmail", payload.email);
+          }
 
-        onLoginSuccess();
-        onClose();
-        // Reset form
-        setEmail("");
-        setUsername("");
-        setPassword("");
+          onLoginSuccess();
+          onClose();
+          
+          // Reset form
+          setEmail("");
+          setUsername("");
+          setPassword("");
+        } else {
+          throw new Error("No token received from login server");
+        }
       } else {
-        throw new Error("No token received");
+        // REGISTRATION FLOW: No token expected
+        // Just notify success and switch to login
+        alert("Registration successful! Please log in.");
+        setIsLogin(true); // Switch to Login mode
+        setPassword(""); // Clear password so they re-enter it for security
       }
+
     } catch (err) {
-      // Handle JSON parsing errors specifically
       if (err instanceof SyntaxError) {
-        setError("Invalid response from server. Please check the API endpoint.");
+        setError("Invalid response from server.");
       } else {
         setError(err.message || "An error occurred");
       }
@@ -99,9 +108,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const switchMode = () => {
     setIsLogin(!isLogin);
     setError("");
-    setEmail("");
-    setUsername("");
-    setPassword("");
+    // Keep email/username/password when switching for convenience, 
+    // or clear them if you prefer.
   };
 
   if (!isOpen) return null;
@@ -184,4 +192,3 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     </div>
   );
 }
-

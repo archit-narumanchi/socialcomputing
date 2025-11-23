@@ -3,6 +3,8 @@
 import { useState } from "react";
 import styles from "./PostBubble.module.css";
 
+const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
+
 /**
  * Quick utility to display relative-ish timestamps without extra deps.
  */
@@ -29,8 +31,12 @@ export default function PostBubble({ post, currentUserId = null }) {
 
   const initialLikeCount =
     Array.isArray(likes) ? likes.length : Number(likes) || 0;
+  
   const [likesCount, setLikesCount] = useState(initialLikeCount);
+  // Note: Initial 'liked' state is false because the current fetch API 
+  // doesn't return user-specific like status. It will sync on interaction.
   const [liked, setLiked] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const replyCount = Array.isArray(replies)
     ? replies.length
@@ -50,6 +56,66 @@ export default function PostBubble({ post, currentUserId = null }) {
     : user?.username || user?.email || "Anonymous";
 
   const postClassName = `${styles.post} ${isOwnPost ? styles.postOwn : ""}`;
+
+  const handleToggleLike = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You need to be logged in to like posts.");
+      return;
+    }
+
+    if (isUpdating) return;
+    setIsUpdating(true);
+
+    // 1. Optimistic Update: Update UI immediately
+    const previousLiked = liked;
+    const previousCount = likesCount;
+    
+    const nextLiked = !liked;
+    // Prevent count from going below 0
+    const nextCount = nextLiked ? likesCount + 1 : Math.max(0, likesCount - 1);
+
+    setLiked(nextLiked);
+    setLikesCount(nextCount);
+
+    try {
+      // 2. API Call
+      const response = await fetch(`${API_BASE_URL}/forum/posts/${id}/like`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update like");
+      }
+
+      // 3. Sync Check: Ensure UI matches server reality
+      // The backend toggles based on existing DB state and returns a message.
+      const data = await response.json();
+      const serverSaysLiked = data.message === "Post liked";
+      const serverSaysUnliked = data.message === "Post unliked";
+
+      // If our optimistic guess was wrong (e.g., user refreshed and button showed "unliked" 
+      // but they had actually already liked it previously), correct it now.
+      if (serverSaysLiked && !nextLiked) {
+         setLiked(true);
+         setLikesCount(previousCount + 1);
+      } else if (serverSaysUnliked && nextLiked) {
+         setLiked(false);
+         setLikesCount(Math.max(0, previousCount - 1));
+      }
+
+    } catch (error) {
+      console.error("Like error:", error);
+      // Revert optimistic update on error
+      setLiked(previousLiked);
+      setLikesCount(previousCount);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <article className={postClassName} data-post-id={id}>
@@ -74,15 +140,10 @@ export default function PostBubble({ post, currentUserId = null }) {
             className={`${styles.action} ${styles.likeButton} ${
               liked ? styles.liked : ""
             }`}
-            onClick={() => {
-              const nextLiked = !liked;
-              setLiked(nextLiked);
-              setLikesCount((count) =>
-                Math.max(0, count + (nextLiked ? 1 : -1))
-              );
-            }}
+            onClick={handleToggleLike}
             aria-pressed={liked}
             aria-label={liked ? "Unlike post" : "Like post"}
+            disabled={isUpdating}
           >
             <span aria-hidden="true">♡</span> {likesCount}
           </button>
@@ -94,4 +155,3 @@ export default function PostBubble({ post, currentUserId = null }) {
     </article>
   );
 }
-
