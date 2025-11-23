@@ -20,11 +20,10 @@ export default function CourseCafe() {
   };
 
   const handleNoticeBoard = () => {
-    console.log("Notice board for course:", courseCode);
+    router.push(`/cafe/${courseCode}/notice`);
   };
 
   const handleForum = () => {
-    console.log("handleForum courseCode:", courseCode);
     router.push(`/cafe/${courseCode}/forum`);
   };
 

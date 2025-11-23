@@ -1,0 +1,177 @@
+.page {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff2d4;
+  font-family: var(
+    --font-geist-sans,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+  overflow: hidden;
+}
+
+/* top-left exit */
+.header {
+  padding: 16px 32px 0;
+}
+
+.backButton {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #d0b58a;
+  background: #ffffff;
+  color: #422b1a;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  background: #f5e4c2;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 32px 32px;
+}
+
+/* board background */
+.boardContainer {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  aspect-ratio: 16 / 9;
+}
+
+.boardImage {
+  object-fit: cover;
+}
+
+/* memes overlay on board */
+.memesWrapper {
+  position: absolute;
+  inset: 8% 10%; /* keep margin inside the board frame */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* each meme card */
+.memeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.memeImageWrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 aspect ratio, cleaner for memes */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+
+.memeImage {
+  object-fit: cover;
+}
+
+.memeReported .memeImage {
+  filter: grayscale(1) brightness(0.5);
+}
+
+/* text + actions */
+.metaRow {
+  font-size: 13px;
+  color: #422b1a;
+}
+
+.postedBy strong {
+  font-weight: 600;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.likeButton,
+.reportButton {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.likeButton {
+  background: #ffffff;
+  border: 1px solid #d0b58a;
+  color: #422b1a;
+}
+
+.likeButtonActive {
+  background: #422b1a;
+  color: #ffe9a5;
+  border-color: #422b1a;
+}
+
+.reportButton {
+  background: #fef2f2;
+  color: #b3261e;
+  border: 1px solid #f3b8b8;
+}
+
+.reportButton:disabled,
+.likeButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* stack memes nicely on narrow screens */
+@media (max-width: 768px) {
+  .boardContainer {
+    aspect-ratio: 3 / 4;
+  }
+
+  .memesWrapper {
+    position: absolute;
+    inset: 15% 10%; /* adjust inset so they sit nicely inside the board */
+    display: flex;
+    flex-direction: row; /* ← side by side */
+    justify-content: center; /* ← center horizontally */
+    align-items: center;     /* ← center vertically */
+    gap: 32px;               /* space between memes */
+  }
+
+
+  .memeCard {
+    width: 300px; /* fixed size so two fit nicely */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  }
+}
