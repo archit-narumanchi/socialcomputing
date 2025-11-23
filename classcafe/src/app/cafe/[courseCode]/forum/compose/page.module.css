@@ -1,0 +1,140 @@
+:root {
+  --bg: linear-gradient(180deg, #f0f9ff, #dff0ff 55%, #cfe8ff);
+  --text: #0f172a;
+  --bubble: #c5dfbf;
+  --post: #22c55e;
+  --post-dark: #16a34a;
+  --cancel: #d9d6d1;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 24px 40px;
+  position: relative;
+}
+
+.backButton {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: white;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.main {
+  width: min(960px, 100%);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.composer {
+  background: white;
+  border-radius: 32px;
+  padding: 24px;
+  box-shadow: 0 15px 45px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  min-width: 120px;
+  height: 48px;
+  border-radius: 999px;
+  border: none;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.post {
+  background: var(--post);
+  color: white;
+  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.4);
+}
+
+.post:active {
+  transform: translateY(2px);
+  box-shadow: 0 6px 12px rgba(22, 163, 74, 0.35);
+}
+
+.cancel {
+  background: var(--cancel);
+  color: #4b5563;
+}
+
+.characterArea {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  padding-right: 2rem;
+}
+
+.dot {
+  display: inline-block;
+  border-radius: 50%;
+  background: #c4dcbc;
+}
+
+.dotLarge {
+  width: 26px;
+  height: 26px;
+}
+
+.dotMedium {
+  width: 20px;
+  height: 20px;
+  margin-left: -8px;
+}
+
+.dotSmall {
+  width: 16px;
+  height: 16px;
+  margin-left: -10px;
+}
+
+.avatarCircle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: #2b8cf0;
+  border: 4px solid #1a6bcf;
+  box-shadow: 0 10px 30px rgba(26, 107, 207, 0.35);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-top: 120px;
+  }
+
+  .characterArea {
+    align-self: center;
+    padding-right: 0;
+  }
+}
+

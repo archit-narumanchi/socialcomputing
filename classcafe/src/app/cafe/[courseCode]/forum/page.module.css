@@ -1,0 +1,100 @@
+:root {
+  --background: #f6fbff;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  justify-content: center;
+  padding: 80px 24px 40px;
+  position: relative;
+}
+
+.backButton {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid #9fc5de;
+  background: #d5eaf8;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.main {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  justify-content: center;
+}
+
+.courseHeader {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.courseTitle {
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #1a1a1a;
+}
+
+.courseCode {
+  font-size: 18px;
+  color: #666;
+  margin: 0;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: center;
+}
+
+.noPosts {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  padding: 48px;
+}
+
+.composeButton {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #34d399, #059669);
+  box-shadow: 0 12px 24px rgba(5, 150, 105, 0.35);
+  color: #f8fffb;
+  font-size: 2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-top: 120px;
+  }
+
+  .backButton {
+    top: 12px;
+    left: 12px;
+  }
+}
+

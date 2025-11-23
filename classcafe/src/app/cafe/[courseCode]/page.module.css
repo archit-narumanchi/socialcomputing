@@ -1,0 +1,94 @@
+.page {
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9dcaa;
+  font-family: var(--font-geist-sans, system-ui, sans-serif);
+}
+
+.header {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+}
+
+.exitButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #966e51;
+  background: #f9dcaa;
+  color: #4e321e;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.exitButton:hover {
+  background: #f0d9aa;
+  border-color: #4e321e;
+  transform: translateY(-1px);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.cafeButton {
+  min-width: 220px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  border: 2px solid #422b1a;
+  background: #422b1a;
+  color: #fff2d4;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cafeButton:hover {
+  background: #2f1f12;
+  border-color: #2f1f12;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(66, 43, 26, 0.2);
+}
+
+.cafeButton:active {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+  .header {
+    top: 16px;
+    left: 16px;
+  }
+
+  .exitButton {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .cafeButton {
+    min-width: 180px;
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
+  .buttonGroup {
+    gap: 16px;
+  }
+}

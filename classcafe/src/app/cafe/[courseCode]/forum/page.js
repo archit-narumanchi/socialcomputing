@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import PostBubble from "../../PostBubble";
+import PostBubble from "../../../../PostBubble";
 import styles from "./page.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
@@ -20,26 +20,19 @@ const decodeTokenPayload = (token) => {
 };
 
 export default function ForumPage() {
+  const router = useRouter();
+  const { courseCode } = useParams();
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [course, setCourse] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const courseId = searchParams.get("courseId");
-  const courseIdNumber = courseId ? Number(courseId) : null;
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/");
-      return;
-    }
-
-    if (!courseIdNumber) {
+    if (!token || !courseCode) {
       router.push("/");
       return;
     }
@@ -57,9 +50,9 @@ export default function ForumPage() {
 
     setIsAuthenticated(true);
     setIsLoading(true);
-        fetchCourseInfo(token);
-        fetchPosts(token);
-  }, [router, courseIdNumber]);
+    fetchCourseInfo(token);
+    fetchPosts(token);
+  }, [router, courseCode]);
 
   const fetchCourseInfo = async (tokenFromEffect) => {
     try {
@@ -72,11 +65,15 @@ export default function ForumPage() {
 
       if (response.ok) {
         const courses = await response.json();
-        const foundCourse = courses.find((c) => c.id === courseIdNumber);
+
+        // Match either by id or courseCode, depending on backend shape
+        const foundCourse = courses.find(
+          (c) => c.id === courseCode || c.courseCode === courseCode
+        );
+
         if (foundCourse) {
           setCourse(foundCourse);
         } else {
-          // Course not found in enrolled courses, redirect
           router.push("/");
         }
       }
@@ -92,7 +89,7 @@ export default function ForumPage() {
     try {
       const token = tokenFromEffect || localStorage.getItem("token");
       const response = await fetch(
-        `${API_BASE_URL}/forum/course/${courseId}/posts`,
+        `${API_BASE_URL}/forum/course/${courseCode}/posts`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +99,6 @@ export default function ForumPage() {
 
       if (response.ok) {
         const postsData = await response.json();
-        // Transform posts to match PostBubble format
         const transformedPosts = postsData.map((post) => ({
           id: post.id,
           content: post.content,
@@ -136,7 +132,7 @@ export default function ForumPage() {
 
   return (
     <div className={styles.page}>
-      <Link href={`/cafe/${course.courseCode}`} className={styles.backButton}>
+      <Link href={`/cafe/${courseCode}`} className={styles.backButton}>
         Go Back
       </Link>
       <main className={styles.main}>
@@ -148,7 +144,9 @@ export default function ForumPage() {
           {isLoadingPosts ? (
             <div>Loading posts...</div>
           ) : posts.length === 0 ? (
-            <div className={styles.noPosts}>No posts yet. Be the first to post!</div>
+            <div className={styles.noPosts}>
+              No posts yet. Be the first to post!
+            </div>
           ) : (
             posts.map((post) => (
               <PostBubble
@@ -161,7 +159,7 @@ export default function ForumPage() {
         </div>
       </main>
       <Link
-        href={`/forum/compose?courseId=${courseId}`}
+        href={`/cafe/${courseCode}/forum/compose`}
         className={styles.composeButton}
       >
         +
@@ -169,4 +167,3 @@ export default function ForumPage() {
     </div>
   );
 }
-

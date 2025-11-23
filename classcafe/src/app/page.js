@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import styles from "./page.module.css";
 import AuthModal from "../components/AuthModal";
 import Image from "next/image";
@@ -18,10 +17,9 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState({});
-  const [hasSearched, setHasSearched] = useState(false); // Track if a search has been made
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
     if (token) {
@@ -64,7 +62,7 @@ export default function Home() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    
+
     setHasSearched(true);
 
     if (!searchQuery.trim()) {
@@ -99,7 +97,7 @@ export default function Home() {
   };
 
   const handleEnroll = async (courseId) => {
-    setIsEnrolling({ ...isEnrolling, [courseId]: true });
+    setIsEnrolling((prev) => ({ ...prev, [courseId]: true }));
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/courses/${courseId}/join`, {
@@ -110,11 +108,9 @@ export default function Home() {
       });
 
       if (response.ok) {
-        // Refresh enrolled courses
         await fetchEnrolledCourses();
-        // Remove from search results
-        setSearchResults(
-          searchResults.filter((course) => course.id !== courseId)
+        setSearchResults((prev) =>
+          prev.filter((course) => course.id !== courseId)
         );
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -124,23 +120,20 @@ export default function Home() {
       console.error("Error enrolling in course:", error);
       alert("Failed to enroll in course");
     } finally {
-      setIsEnrolling({ ...isEnrolling, [courseId]: false });
+      setIsEnrolling((prev) => ({ ...prev, [courseId]: false }));
     }
   };
 
-  const handleCourseClick = (courseId) => {
-    router.push(`/forum?courseId=${courseId}`);
+  const handleCourseClick = (course) => {
+    // courseId == courseCode (string)
+    router.push(`/cafe/${course.courseCode}`);
   };
 
   const handleStartClick = () => {
-    if (!isLoggedIn) {
-      setIsAuthModalOpen(true);
-    } else {
-      router.push("/forum");
-    }
+    // landing page → just open auth
+    setIsAuthModalOpen(true);
   };
 
-  // If not logged in, show only login modal
   if (!isLoggedIn) {
     return (
       <div className={styles.page}>
@@ -148,7 +141,6 @@ export default function Home() {
           <Image
             src="/assets/logo_new.png"
             alt="ClassCafe logo"
-            
             width={640}
             height={360}
             className={styles.imageSizing}
@@ -158,17 +150,9 @@ export default function Home() {
             className={styles.startButton}
             onClick={handleStartClick}
           >
-            {isLoggedIn ? "View Cafes" : "Start using ClassCafe"}
+            Start using ClassCafe
           </button>
         </div>
-        {/* <main className={styles.main}>
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className={styles.loginButton}
-          >
-            Login / Register
-          </button>
-        </main> */}
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
@@ -178,10 +162,8 @@ export default function Home() {
     );
   }
 
-  // Check if course is enrolled
-  const isEnrolled = (courseId) => {
-    return enrolledCourses.some((course) => course.id === courseId);
-  };
+  const isEnrolled = (courseId) =>
+    enrolledCourses.some((course) => course.id === courseId);
 
   return (
     <div className={styles.page}>
@@ -192,7 +174,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Search Bar */}
         <form onSubmit={handleSearch} className={styles.searchContainer}>
           <input
             type="text"
@@ -201,12 +182,15 @@ export default function Home() {
             placeholder="Search for courses..."
             className={styles.searchInput}
           />
-          <button type="submit" className={styles.searchButton} disabled={isSearching}>
+          <button
+            type="submit"
+            className={styles.searchButton}
+            disabled={isSearching}
+          >
             {isSearching ? "Searching..." : "Search"}
           </button>
         </form>
 
-        {/* Search Results */}
         {searchResults.length > 0 && (
           <div className={styles.searchResults}>
             <h2 className={styles.sectionTitle}>Search Results</h2>
@@ -234,26 +218,25 @@ export default function Home() {
           </div>
         )}
 
-        {/* No search results */}
         {hasSearched && !isSearching && searchResults.length === 0 && (
           <p className={styles.noResults}>
             Course not found :( <br /> Maybe try another?
           </p>
         )}
 
-        {/* Enrolled Courses */}
         <div className={styles.enrolledCourses}>
           <h2 className={styles.sectionTitle}>My Courses</h2>
           {enrolledCourses.length === 0 ? (
             <p className={styles.noCourses}>
-              You haven't enrolled in any courses yet. Search above to find courses!
+              You haven't enrolled in any courses yet. Search above to find
+              courses!
             </p>
           ) : (
             <div className={styles.courseGrid}>
               {enrolledCourses.map((course) => (
                 <button
                   key={course.id}
-                  onClick={() => handleCourseClick(course.id)}
+                  onClick={() => handleCourseClick(course)}
                   className={styles.courseButton}
                 >
                   <div className={styles.courseButtonContent}>
@@ -264,8 +247,12 @@ export default function Home() {
                       height={90}
                       className={styles.courseImage}
                     />
-                    <h3 className={styles.courseButtonTitle}>{course.title}</h3>
-                    <p className={styles.courseButtonCode}>{course.courseCode}</p>
+                    <h3 className={styles.courseButtonTitle}>
+                      {course.title}
+                    </h3>
+                    <p className={styles.courseButtonCode}>
+                      {course.courseCode}
+                    </p>
                   </div>
                 </button>
               ))}
