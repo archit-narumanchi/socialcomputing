@@ -5,25 +5,25 @@ import { isEnrolled } from '../middleware/enrollment';
 
 const router = Router();
 
-// --- Get the latest Meme for a course ---
-// GET /api/bulletin/course/:courseId/meme
-router.get('/course/:courseId/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
-  const { courseId } = req.params;
+// GET /api/bulletin/course/:courseCode/meme
+router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
+  const { courseCode } = req.params;
 
   try {
-    // Get the most recent meme post
+    const course = await prisma.course.findUnique({
+      where: { courseCode: courseCode },
+    });
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
     const meme = await prisma.memePost.findFirst({
       where: {
-        courseId: parseInt(courseId),
+        courseId: course.id,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        user: {
-          select: { username: true },
-        },
-      },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { username: true } } },
     });
 
     res.status(200).json(meme || { message: 'No meme yet this week' });
@@ -33,10 +33,9 @@ router.get('/course/:courseId/meme', isAuthenticated, isEnrolled, async (req: Au
   }
 });
 
-// --- Post a Meme (Winner Only) ---
-// POST /api/bulletin/course/:courseId/meme
-router.post('/course/:courseId/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
-  const { courseId } = req.params;
+// POST /api/bulletin/course/:courseCode/meme
+router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
+  const { courseCode } = req.params;
   const userId = req.userId!;
   const { imageUrl } = req.body;
 
@@ -45,12 +44,19 @@ router.post('/course/:courseId/meme', isAuthenticated, isEnrolled, async (req: A
   }
 
   try {
-    // 1. Check if the user is the Top Contributor
+    const course = await prisma.course.findUnique({
+      where: { courseCode: courseCode },
+    });
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
           userId: userId,
-          courseId: parseInt(courseId),
+          courseId: course.id,
         },
       },
     });
@@ -59,12 +65,11 @@ router.post('/course/:courseId/meme', isAuthenticated, isEnrolled, async (req: A
       return res.status(403).json({ error: 'Only the Top Contributor can post a meme!' });
     }
 
-    // 2. Create the meme post
     const newMeme = await prisma.memePost.create({
       data: {
         imageUrl: imageUrl,
         userId: userId,
-        courseId: parseInt(courseId),
+        courseId: course.id,
       },
     });
 

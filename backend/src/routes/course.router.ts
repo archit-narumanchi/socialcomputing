@@ -1,14 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../db';
 import { isAuthenticated, AuthRequest } from '../middleware/auth';
-// --- FIX 1: Use Prisma.PrismaClientKnownRequestError and import Course as a type ---
 import { Prisma, type Course } from '@prisma/client';
 
 const router = Router();
 
 // --- Search for Courses ---
 // GET /api/courses/search?q=intro
-// A protected route for any logged-in user to find courses
 router.get('/search', isAuthenticated, async (req: AuthRequest, res) => {
   const query = req.query.q as string;
 
@@ -23,7 +21,7 @@ router.get('/search', isAuthenticated, async (req: AuthRequest, res) => {
           {
             title: {
               contains: query,
-              mode: 'insensitive', // Makes search case-insensitive
+              mode: 'insensitive',
             },
           },
           {
@@ -34,7 +32,7 @@ router.get('/search', isAuthenticated, async (req: AuthRequest, res) => {
           },
         ],
       },
-      take: 20, // Limit results to 20
+      take: 20,
     });
     res.status(200).json(courses);
   } catch (error) {
@@ -43,26 +41,34 @@ router.get('/search', isAuthenticated, async (req: AuthRequest, res) => {
   }
 });
 
-// --- Join (Enroll in) a Course ---
-// POST /api/courses/123/join
-// A protected route for a user to enroll in a course
-router.post('/:courseId/join', isAuthenticated, async (req: AuthRequest, res) => {
-  const { courseId } = req.params;
-  const userId = req.userId; // We get this from the isAuthenticated middleware
+// --- Join (Enroll in) a Course by Code ---
+// POST /api/courses/:courseCode/join
+router.post('/:courseCode/join', isAuthenticated, async (req: AuthRequest, res) => {
+  const { courseCode } = req.params;
+  const userId = req.userId;
 
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
-    // Create the enrollment record
+    // 1. Find the course first using the unique courseCode
+    const course = await prisma.course.findUnique({
+      where: { courseCode: courseCode },
+    });
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // 2. Create the enrollment using the found ID
     const newEnrollment = await prisma.enrollment.create({
       data: {
         userId: userId,
-        courseId: parseInt(courseId),
+        courseId: course.id,
       },
       include: {
-        course: true, // Include the course details in the response
+        course: true,
       },
     });
     res.status(201).json(newEnrollment);
@@ -81,7 +87,6 @@ router.post('/:courseId/join', isAuthenticated, async (req: AuthRequest, res) =>
 
 // --- Get My Enrolled Courses ---
 // GET /api/courses/my
-// A protected route to get all courses the current user is enrolled in
 router.get('/my', isAuthenticated, async (req: AuthRequest, res) => {
   const userId = req.userId;
 
@@ -95,12 +100,10 @@ router.get('/my', isAuthenticated, async (req: AuthRequest, res) => {
         userId: userId,
       },
       include: {
-        course: true, // This is what your frontend needs
+        course: true,
       },
     });
 
-    // --- FIX 2: Explicitly type 'e' to satisfy TypeScript ---
-    // We just want to return the list of courses, not the enrollment object
     const courses = enrollments.map((e: { course: Course }) => e.course);
     res.status(200).json(courses);
     

@@ -7,6 +7,7 @@ import forumRouter from './routes/forum.router'; // <-- ADD THIS LINE
 import adminRouter from './routes/admin.router'; // <-- ADD THIS LINE
 import cronRouter from './routes/cron.router';
 import bulletinRouter from './routes/bulletin.router';
+import avatarRouter from './routes/avatar.router';
 
 // Load environment variables
 dotenv.config();
@@ -43,6 +44,9 @@ app.use('/api/forum', forumRouter); // <-- ADD THIS LINE
 
 // Admin routes
 app.use('/api/admin', adminRouter);
+
+// Avatar routes
+app.use('/api/avatar', avatarRouter); // <-- ADD THIS
 
 // --- Start Server ---
 app.listen(PORT, () => {
