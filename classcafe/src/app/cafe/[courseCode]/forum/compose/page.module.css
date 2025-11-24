@@ -121,10 +121,10 @@
 .avatarCircle {
   width: 110px;
   height: 110px;
-  border-radius: 50%;
-  background: #2b8cf0;
-  border: 4px solid #1a6bcf;
-  box-shadow: 0 10px 30px rgba(26, 107, 207, 0.35);
+  /* border-radius: 50%; */
+  /* background: #2b8cf0; */
+  /* border: 4px solid #1a6bcf; */
+  /* box-shadow: 0 10px 30px rgba(26, 107, 207, 0.35); */
 }
 
 @media (max-width: 640px) {

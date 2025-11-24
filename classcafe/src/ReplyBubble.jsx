@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import styles from "./PostBubble.module.css"; // Reuse PostBubble styles
+import { getAvatarUrl } from "./utils/avatarUtils";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -18,13 +20,11 @@ const formatTimestamp = (value) => {
 export default function ReplyBubble({ reply, currentUserId = null }) {
   if (!reply) return null;
 
-  // 1. Destructure isLiked from the reply object (passed from parent)
   const { id, content, createdAt, user, _count, isLiked = false } = reply;
   
   const initialLikeCount = _count?.likes || 0;
   
   const [likesCount, setLikesCount] = useState(initialLikeCount);
-  // 2. Initialize state with the prop value
   const [liked, setLiked] = useState(isLiked);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -35,6 +35,9 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
   const displayName = isOwnReply ? "You" : user?.username || "Anonymous";
 
   const bubbleClassName = `${styles.post} ${isOwnReply ? styles.postOwn : ""}`;
+  
+  // Get specific avatar
+  const avatarUrl = getAvatarUrl(user?.avatarConfig);
 
   const handleToggleLike = async () => {
     const token = localStorage.getItem("token");
@@ -48,7 +51,6 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
 
     const previousLiked = liked;
     const previousCount = likesCount;
-    
     const nextLiked = !liked;
     const nextCount = nextLiked ? likesCount + 1 : Math.max(0, likesCount - 1);
 
@@ -86,11 +88,20 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
   return (
     <article className={bubbleClassName}>
       <div className={styles.avatarColumn}>
-        <div className={styles.avatarCircle} style={{ width: '50px', height: '50px' }} aria-hidden="true" />
+        <div className={styles.avatarCircle} style={{ width: '50px', height: '50px' }}>
+           <Image 
+            src={avatarUrl} 
+            alt={`${displayName}'s avatar`}
+            width={50} 
+            height={50} 
+            style={{ objectFit: "contain", width: "100%", height: "100%" }}
+          />
+        </div>
         <span className={styles.avatarLabel} style={{ fontSize: '0.75rem' }}>{displayName}</span>
       </div>
 
       <div className={styles.messageColumn}>
+        <span className={styles.thoughtDot} aria-hidden="true" />
         <header className={styles.header}>
           <time className={styles.timestamp} dateTime={createdAt}>
             {formatTimestamp(createdAt)}

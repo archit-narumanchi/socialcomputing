@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import styles from "./PostBubble.module.css";
+import { getAvatarUrl } from "./utils/avatarUtils"; // Import the helper
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -21,11 +23,9 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
 
   if (!post) return null;
 
-  // Destructure isLiked (boolean) and likes (count) from the transformed post object
   const { id, content, createdAt, user, likes = 0, replies = 0, isLiked = false } = post;
 
   const [likesCount, setLikesCount] = useState(Number(likes));
-  // Initialize state with the value from the backend
   const [liked, setLiked] = useState(isLiked);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -35,6 +35,9 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
   const displayName = isOwnPost ? "You" : user?.username || user?.email || "Anonymous";
 
   const postClassName = `${styles.post} ${isOwnPost ? styles.postOwn : ""}`;
+
+  // Get the specific avatar URL based on user's config
+  const avatarUrl = getAvatarUrl(user?.avatarConfig);
 
   const handlePostClick = () => {
     if (isClickable && courseCode) {
@@ -76,7 +79,6 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
       const serverSaysLiked = data.message === "Post liked";
       const serverSaysUnliked = data.message === "Post unliked";
 
-      // Sync Check
       if (serverSaysLiked && !nextLiked) {
          setLiked(true);
          setLikesCount(previousCount + 1);
@@ -101,7 +103,16 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
       style={{ cursor: isClickable ? 'pointer' : 'default' }}
     >
       <div className={styles.avatarColumn}>
-        <div className={styles.avatarCircle} aria-hidden="true" />
+        {/* Render the custom avatar image */}
+        <div className={styles.avatarCircle}>
+          <Image 
+            src={avatarUrl} 
+            alt={`${displayName}'s avatar`}
+            width={72} 
+            height={72} 
+            style={{ objectFit: "contain", width: "100%", height: "100%" }}
+          />
+        </div>
         <span className={styles.avatarLabel}>{displayName}</span>
       </div>
 

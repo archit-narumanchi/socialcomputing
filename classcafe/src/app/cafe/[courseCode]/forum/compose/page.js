@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import ThoughtTextarea from "../../../../../ThoughtTextarea";
 import styles from "./page.module.css";
+import { getAvatarUrl } from "../../../../../utils/avatarUtils";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -16,6 +18,7 @@ export default function ComposePostPage() {
   const [isPosting, setIsPosting] = useState(false);
   const [pageError, setPageError] = useState("");
   const [isReady, setIsReady] = useState(false);
+  const [myAvatarUrl, setMyAvatarUrl] = useState(getAvatarUrl("none"));
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -31,6 +34,10 @@ export default function ComposePostPage() {
       setIsReady(true);
       return;
     }
+
+    // Fetch current user's avatar preference for this course
+    const savedId = localStorage.getItem(`avatar:${courseCode}`);
+    setMyAvatarUrl(getAvatarUrl(savedId));
 
     setIsReady(true);
   }, [courseCode]);
@@ -49,7 +56,6 @@ export default function ComposePostPage() {
         return;
       }
 
-      // ⚠️ This still uses courseCode in the API – backend will 500 until we swap to numeric ID
       const response = await fetch(
         `${API_BASE_URL}/forum/course/${courseCode}/posts`,
         {
@@ -71,7 +77,6 @@ export default function ComposePostPage() {
         );
       }
 
-      // back to forum for this course
       router.push(`/cafe/${courseCode}/forum`);
     } catch (err) {
       setPageError(err.message || "Failed to post. Please try again.");
@@ -90,7 +95,6 @@ export default function ComposePostPage() {
   }
 
   if (pageError && !localStorage.getItem("token")) {
-    // not logged in – show message + link home
     return (
       <div className={styles.page}>
         <main className={styles.main}>
@@ -146,7 +150,16 @@ export default function ComposePostPage() {
           <span className={`${styles.dot} ${styles.dotLarge}`} />
           <span className={`${styles.dot} ${styles.dotMedium}`} />
           <span className={`${styles.dot} ${styles.dotSmall}`} />
-          <div className={styles.avatarCircle} />
+          {/* Render actual avatar image */}
+          <div className={styles.avatarCircle} style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+             <Image 
+                src={myAvatarUrl} 
+                alt="My Avatar" 
+                width={110} 
+                height={110} 
+                style={{ objectFit: "contain" }}
+             />
+          </div>
         </div>
       </main>
     </div>

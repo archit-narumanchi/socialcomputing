@@ -4,67 +4,23 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { AVATAR_OPTIONS } from "../../../../utils/avatarUtils";
 import styles from "./page.module.css";
 
-const AVATAR_OPTIONS = [
-  {
-    id: "none",
-    label: "No accessory",
-    accessorySrc: "/assets/accessory_none.png",
-    avatarSrc: "/assets/nupjukif.png",
-    price: 0,
-  },
-  {
-    id: "flower1",
-    label: "Flower 1",
-    accessorySrc: "/assets/accessory_flower1.png",
-    avatarSrc: "/assets/nupjukif_flower1.png",
-    price: 20,
-  },
-  {
-    id: "flower2",
-    label: "Flower 2",
-    accessorySrc: "/assets/accessory_flower2.png",
-    avatarSrc: "/assets/nupjukif_flower2.png",
-    price: 20,
-  },
-  {
-    id: "party1",
-    label: "Party 1",
-    accessorySrc: "/assets/accessory_party1.png",
-    avatarSrc: "/assets/nupjukif_party1.png",
-    price: 30,
-  },
-  {
-    id: "party2",
-    label: "Party 2",
-    accessorySrc: "/assets/accessory_party2.png",
-    avatarSrc: "/assets/nupjukif_party2.png",
-    price: 30,
-  },
-  {
-    id: "ribbon",
-    label: "Ribbon",
-    accessorySrc: "/assets/accessory_ribbon.png",
-    avatarSrc: "/assets/nupjukif_ribbon.png",
-    price: 25,
-  },
-];
-
+const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 const DEFAULT_COINS = 100;
 
 export default function AvatarPage() {
   const router = useRouter();
-  const { courseCode } = useParams(); // /cafe/[courseCode]/avatar
+  const { courseCode } = useParams();
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isReady, setIsReady] = useState(false);
-
   const [coins, setCoins] = useState(0);
-  const [unlockedIds, setUnlockedIds] = useState([]); // global per user
+  const [unlockedIds, setUnlockedIds] = useState([]);
   const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Load user-based currency + unlocked accessories and course-based avatar
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -73,21 +29,19 @@ export default function AvatarPage() {
       return;
     }
 
-    // 1) global currency for this user
+    // 1. Load coins
     const coinsKey = `coins:${userId}`;
-    const unlockedKey = `unlockedAccessories:${userId}`;
-
     let startingCoins = DEFAULT_COINS;
     const storedCoins = localStorage.getItem(coinsKey);
     if (storedCoins !== null) {
       const parsed = Number(storedCoins);
       if (!Number.isNaN(parsed)) startingCoins = parsed;
     }
-    localStorage.setItem(coinsKey, String(startingCoins));
     setCoins(startingCoins);
 
-    // 2) global unlocked accessories for this user
-    let initialUnlocked = ["none"]; // base avatar is always unlocked
+    // 2. Load unlocked accessories
+    const unlockedKey = `unlockedAccessories:${userId}`;
+    let initialUnlocked = ["none"];
     const rawUnlocked = localStorage.getItem(unlockedKey);
     if (rawUnlocked) {
       try {
@@ -96,21 +50,17 @@ export default function AvatarPage() {
           initialUnlocked = Array.from(new Set([...initialUnlocked, ...arr]));
         }
       } catch {
-        // ignore parse errors; keep default
+        // ignore
       }
     }
     setUnlockedIds(initialUnlocked);
 
-    // 3) per-course selected avatar
-    if (courseCode) {
-      const courseAvatarKey = `avatar:${courseCode}`;
-      const savedId = localStorage.getItem(courseAvatarKey);
-      if (savedId) {
-        const idx = AVATAR_OPTIONS.findIndex((opt) => opt.id === savedId);
-        if (idx !== -1) {
-          setSelectedIndex(idx);
-        }
-      }
+    // 3. Load current selection (Optimistic from local storage, ideally sync with backend)
+    const courseAvatarKey = `avatar:${courseCode}`;
+    const savedId = localStorage.getItem(courseAvatarKey);
+    if (savedId) {
+      const idx = AVATAR_OPTIONS.findIndex((opt) => opt.id === savedId);
+      if (idx !== -1) setSelectedIndex(idx);
     }
 
     setIsReady(true);
@@ -135,7 +85,6 @@ export default function AvatarPage() {
       return;
     }
 
-    // locked: try to buy
     if (coins < option.price) {
       setError("Not enough coins to buy this accessory.");
       return;
@@ -147,9 +96,7 @@ export default function AvatarPage() {
     if (!confirmPurchase) return;
 
     const newCoins = coins - option.price;
-    const newUnlocked = Array.from(
-      new Set([...unlockedIds, option.id])
-    );
+    const newUnlocked = Array.from(new Set([...unlockedIds, option.id]));
 
     setCoins(newCoins);
     setUnlockedIds(newUnlocked);
@@ -158,12 +105,42 @@ export default function AvatarPage() {
     setError("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!courseCode) return;
-    const selected = AVATAR_OPTIONS[selectedIndex];
-    const key = `avatar:${courseCode}`;
-    localStorage.setItem(key, selected.id);
-    router.push(`/cafe/${courseCode}`);
+    setIsSaving(true);
+    
+    try {
+      const selected = AVATAR_OPTIONS[selectedIndex];
+      const token = localStorage.getItem("token");
+
+      // 1. Save to local storage (for immediate local use)
+      const key = `avatar:${courseCode}`;
+      localStorage.setItem(key, selected.id);
+
+      // 2. Save to Backend (so others can see it)
+      // We send { id: "flower1" } as the config
+      const response = await fetch(`${API_BASE_URL}/avatar/equip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          config: { id: selected.id }, 
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn("Failed to sync avatar to server");
+      }
+
+      router.push(`/cafe/${courseCode}`);
+    } catch (err) {
+      console.error("Error saving avatar:", err);
+      setError("Failed to save avatar. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -173,9 +150,7 @@ export default function AvatarPage() {
   if (!isReady) {
     return (
       <div className={styles.page}>
-        <main className={styles.main}>
-          <div>Loading avatar settings...</div>
-        </main>
+        <main className={styles.main}><div>Loading...</div></main>
       </div>
     );
   }
@@ -195,7 +170,6 @@ export default function AvatarPage() {
       </header>
 
       <main className={styles.main}>
-        {/* Big avatar preview */}
         <section className={styles.previewSection}>
           <div className={styles.previewContainer}>
             <Image
@@ -204,18 +178,16 @@ export default function AvatarPage() {
               width={320}
               height={480}
               className={styles.previewImage}
+              priority
             />
           </div>
         </section>
 
-        {/* 3x2 accessory grid */}
         <section className={styles.optionsSection}>
           <h2 className={styles.title}>Choose your avatar</h2>
           <div className={styles.optionsGrid}>
             {AVATAR_OPTIONS.map((opt, index) => {
-              const isUnlocked =
-                unlockedIds.includes(opt.id) || opt.price === 0;
-
+              const isUnlocked = unlockedIds.includes(opt.id) || opt.price === 0;
               return (
                 <button
                   key={opt.id}
@@ -243,22 +215,22 @@ export default function AvatarPage() {
             })}
           </div>
 
-          {error && (
-            <div className={styles.errorMessage}>{error}</div>
-          )}
+          {error && <div className={styles.errorMessage}>{error}</div>}
 
           <div className={styles.actions}>
             <button
               type="button"
               className={styles.saveButton}
               onClick={handleSave}
+              disabled={isSaving}
             >
-              Save avatar
+              {isSaving ? "Saving..." : "Save avatar"}
             </button>
             <button
               type="button"
               className={styles.cancelButton}
               onClick={handleCancel}
+              disabled={isSaving}
             >
               Cancel
             </button>
