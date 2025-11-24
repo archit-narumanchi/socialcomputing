@@ -56,7 +56,7 @@ export default function CourseCafe() {
   };
 
   const handleNotifications = () => {
-    console.log("Notifications for course:", courseCode);
+    router.push(`/cafe/${courseCode}/notifications`);
   };
 
   const handleNoticeBoard = () => {
