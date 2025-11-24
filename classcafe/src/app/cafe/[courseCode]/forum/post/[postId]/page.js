@@ -115,6 +115,7 @@ export default function PostDetailPage() {
             <PostBubble 
               post={post} 
               currentUserId={currentUserId} 
+              courseCode={courseCode}
               isClickable={false} 
             />
           </div>

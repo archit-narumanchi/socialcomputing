@@ -152,6 +152,7 @@ export default function ForumPage() {
               <PostBubble
                 key={post.id}
                 post={post}
+                courseCode={courseCode}
                 currentUserId={currentUserId}
               />
             ))

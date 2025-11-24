@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation"; // Import routing hooks
+import { useRouter } from "next/navigation";
 import styles from "./PostBubble.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
@@ -16,10 +16,9 @@ const formatTimestamp = (value) => {
   }).format(date);
 };
 
-// Added isClickable prop to disable navigation when we are already on the detail page
-export default function PostBubble({ post, currentUserId = null, isClickable = true }) {
+// Update: Accept courseCode as a prop
+export default function PostBubble({ post, courseCode, currentUserId = null, isClickable = true }) {
   const router = useRouter();
-  const params = useParams(); // To get courseCode safely
 
   if (!post) return null;
 
@@ -39,15 +38,17 @@ export default function PostBubble({ post, currentUserId = null, isClickable = t
 
   const postClassName = `${styles.post} ${isOwnPost ? styles.postOwn : ""}`;
 
-  // Handle navigation to the detail page
   const handlePostClick = () => {
-    if (isClickable && params.courseCode) {
-      router.push(`/cafe/${params.courseCode}/forum/post/${id}`);
+    // Only navigate if clickable and we have the courseCode
+    if (isClickable && courseCode) {
+      router.push(`/cafe/${courseCode}/forum/post/${id}`);
+    } else if (isClickable && !courseCode) {
+      console.warn("Cannot navigate: courseCode is missing");
     }
   };
 
   const handleToggleLike = async (e) => {
-    e.stopPropagation(); // Prevents triggering the post navigation when clicking Like
+    e.stopPropagation(); // Prevents triggering navigation
     
     const token = localStorage.getItem("token");
     if (!token) {
@@ -99,7 +100,7 @@ export default function PostBubble({ post, currentUserId = null, isClickable = t
       className={postClassName} 
       data-post-id={id} 
       onClick={handlePostClick}
-      style={{ cursor: isClickable ? 'pointer' : 'default' }} // Visual cue
+      style={{ cursor: isClickable ? 'pointer' : 'default' }}
     >
       <div className={styles.avatarColumn}>
         <div className={styles.avatarCircle} aria-hidden="true" />
