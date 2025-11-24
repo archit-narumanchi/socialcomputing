@@ -104,6 +104,10 @@ export default function ForumPage() {
           content: post.content,
           createdAt: post.createdAt,
           user: post.user,
+          // 'likes' from backend is now an array containing the user's ID if they liked it.
+          // We transform this into a boolean 'isLiked'.
+          isLiked: post.likes && post.likes.length > 0,
+          // We map the total count to 'likes' for the bubble to display.
           likes: post._count?.likes || 0,
           replies: post._count?.replies || 0,
         }));

@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import PostBubble from "../../../../../../PostBubble";
 import ReplyBubble from "../../../../../../ReplyBubble";
-import styles from "../../page.module.css"; // Reuse existing forum styles
+import styles from "../../page.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -31,34 +31,43 @@ export default function PostDetailPage() {
 
     const fetchData = async () => {
       try {
-        // 1. Fetch all course posts to find the specific one
-        // (Workaround since there isn't a direct GET /posts/:id endpoint yet)
+        // 1. Fetch posts to find specific one
         const postsResponse = await fetch(`${API_BASE_URL}/forum/course/${courseCode}/posts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
         if (postsResponse.ok) {
           const allPosts = await postsResponse.json();
-          // Find the post matching the ID from URL
           const foundPost = allPosts.find(p => p.id === Number(postId));
           
           if (foundPost) {
             setPost({
               ...foundPost,
+              isLiked: foundPost.likes && foundPost.likes.length > 0,
               likes: foundPost._count?.likes || 0,
               replies: foundPost._count?.replies || 0,
             });
           }
         }
 
-        // 2. Fetch replies for this post
+        // 2. Fetch replies
         const repliesResponse = await fetch(`${API_BASE_URL}/forum/posts/${postId}/replies`, {
            headers: { Authorization: `Bearer ${token}` },
         });
 
         if (repliesResponse.ok) {
           const repliesData = await repliesResponse.json();
-          setReplies(repliesData);
+          
+          // Helper to recursively add isLiked to replies and their children
+          const transformReply = (reply) => ({
+            ...reply,
+            // Check if likes array has entries (means current user liked it)
+            isLiked: reply.likes && reply.likes.length > 0,
+            // Recursively transform children if they exist
+            children: reply.children ? reply.children.map(transformReply) : []
+          });
+
+          setReplies(repliesData.map(transformReply));
         }
 
       } catch (error) {
@@ -110,17 +119,15 @@ export default function PostDetailPage() {
       
       <main className={styles.main}>
         <div className={styles.feed}>
-          {/* Main Post (Not clickable here) */}
           <div style={{ borderBottom: '2px solid #e5e7eb', paddingBottom: '2rem', width: '100%', display: 'flex', justifyContent: 'center' }}>
             <PostBubble 
               post={post} 
-              currentUserId={currentUserId} 
               courseCode={courseCode}
+              currentUserId={currentUserId} 
               isClickable={false} 
             />
           </div>
 
-          {/* Replies List */}
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
             {replies.length === 0 ? (
               <div className={styles.noPosts} style={{ padding: '20px' }}>No replies yet.</div>

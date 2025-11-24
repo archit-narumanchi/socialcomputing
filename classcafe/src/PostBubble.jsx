@@ -16,20 +16,18 @@ const formatTimestamp = (value) => {
   }).format(date);
 };
 
-// Update: Accept courseCode as a prop
 export default function PostBubble({ post, courseCode, currentUserId = null, isClickable = true }) {
   const router = useRouter();
 
   if (!post) return null;
 
-  const { id, content, createdAt, user, likes = [], replies = [] } = post;
+  // Destructure isLiked (boolean) and likes (count) from the transformed post object
+  const { id, content, createdAt, user, likes = 0, replies = 0, isLiked = false } = post;
 
-  const initialLikeCount = Array.isArray(likes) ? likes.length : Number(likes) || 0;
-  const [likesCount, setLikesCount] = useState(initialLikeCount);
-  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(Number(likes));
+  // Initialize state with the value from the backend
+  const [liked, setLiked] = useState(isLiked);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  const replyCount = Array.isArray(replies) ? replies.length : Number(replies) || 0;
 
   const numericCurrentUserId = currentUserId !== null ? Number(currentUserId) : null;
   const postAuthorId = user?.id !== undefined && user?.id !== null ? Number(user.id) : null;
@@ -39,7 +37,6 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
   const postClassName = `${styles.post} ${isOwnPost ? styles.postOwn : ""}`;
 
   const handlePostClick = () => {
-    // Only navigate if clickable and we have the courseCode
     if (isClickable && courseCode) {
       router.push(`/cafe/${courseCode}/forum/post/${id}`);
     } else if (isClickable && !courseCode) {
@@ -48,7 +45,7 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
   };
 
   const handleToggleLike = async (e) => {
-    e.stopPropagation(); // Prevents triggering navigation
+    e.stopPropagation(); 
     
     const token = localStorage.getItem("token");
     if (!token) {
@@ -79,6 +76,7 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
       const serverSaysLiked = data.message === "Post liked";
       const serverSaysUnliked = data.message === "Post unliked";
 
+      // Sync Check
       if (serverSaysLiked && !nextLiked) {
          setLiked(true);
          setLikesCount(previousCount + 1);
@@ -127,7 +125,7 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
             <span aria-hidden="true">♡</span> {likesCount}
           </button>
           <span className={styles.action}>
-            <span aria-hidden="true">💬</span> {replyCount}
+            <span aria-hidden="true">💬</span> {replies}
           </span>
         </footer>
       </div>

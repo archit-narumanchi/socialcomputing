@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./PostBubble.module.css"; // Reuse PostBubble styles for consistency
+import styles from "./PostBubble.module.css"; // Reuse PostBubble styles
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -18,13 +18,14 @@ const formatTimestamp = (value) => {
 export default function ReplyBubble({ reply, currentUserId = null }) {
   if (!reply) return null;
 
-  const { id, content, createdAt, user, _count } = reply;
+  // 1. Destructure isLiked from the reply object (passed from parent)
+  const { id, content, createdAt, user, _count, isLiked = false } = reply;
   
-  // Handle likes count (API returns _count.likes for replies)
   const initialLikeCount = _count?.likes || 0;
   
   const [likesCount, setLikesCount] = useState(initialLikeCount);
-  const [liked, setLiked] = useState(false);
+  // 2. Initialize state with the prop value
+  const [liked, setLiked] = useState(isLiked);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const numericCurrentUserId = currentUserId !== null ? Number(currentUserId) : null;
@@ -33,7 +34,6 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
 
   const displayName = isOwnReply ? "You" : user?.username || "Anonymous";
 
-  // Reusing post styles, but we might want to add a specific class for replies if needed
   const bubbleClassName = `${styles.post} ${isOwnReply ? styles.postOwn : ""}`;
 
   const handleToggleLike = async () => {
@@ -48,6 +48,7 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
 
     const previousLiked = liked;
     const previousCount = likesCount;
+    
     const nextLiked = !liked;
     const nextCount = nextLiked ? likesCount + 1 : Math.max(0, likesCount - 1);
 
@@ -55,7 +56,6 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
     setLikesCount(nextCount);
 
     try {
-      // Use the Reply endpoint
       const response = await fetch(`${API_BASE_URL}/forum/replies/${id}/like`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
