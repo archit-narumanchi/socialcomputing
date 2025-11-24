@@ -5,7 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import PostBubble from "../../../../../../PostBubble";
 import ReplyBubble from "../../../../../../ReplyBubble";
-import styles from "../../page.module.css";
+import ThoughtTextarea from "../../../../../../ThoughtTextarea";
+import styles from "./page.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -18,6 +19,11 @@ export default function PostDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
 
+  // New state for reply functionality
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyContent, setReplyContent] = useState("");
+  const [isPostingReply, setIsPostingReply] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUserId = localStorage.getItem("userId");
@@ -29,56 +35,105 @@ export default function PostDetailPage() {
     
     if (storedUserId) setCurrentUserId(Number(storedUserId));
 
-    const fetchData = async () => {
-      try {
-        // 1. Fetch posts to find specific one
-        const postsResponse = await fetch(`${API_BASE_URL}/forum/course/${courseCode}/posts`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (postsResponse.ok) {
-          const allPosts = await postsResponse.json();
-          const foundPost = allPosts.find(p => p.id === Number(postId));
-          
-          if (foundPost) {
-            setPost({
-              ...foundPost,
-              isLiked: foundPost.likes && foundPost.likes.length > 0,
-              likes: foundPost._count?.likes || 0,
-              replies: foundPost._count?.replies || 0,
-            });
-          }
-        }
-
-        // 2. Fetch replies
-        const repliesResponse = await fetch(`${API_BASE_URL}/forum/posts/${postId}/replies`, {
-           headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (repliesResponse.ok) {
-          const repliesData = await repliesResponse.json();
-          
-          // Helper to recursively add isLiked to replies and their children
-          const transformReply = (reply) => ({
-            ...reply,
-            // Check if likes array has entries (means current user liked it)
-            isLiked: reply.likes && reply.likes.length > 0,
-            // Recursively transform children if they exist
-            children: reply.children ? reply.children.map(transformReply) : []
-          });
-
-          setReplies(repliesData.map(transformReply));
-        }
-
-      } catch (error) {
-        console.error("Error fetching details:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, [courseCode, postId, router]);
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      // 1. Fetch posts to find specific one
+      const postsResponse = await fetch(`${API_BASE_URL}/forum/course/${courseCode}/posts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (postsResponse.ok) {
+        const allPosts = await postsResponse.json();
+        const foundPost = allPosts.find(p => p.id === Number(postId));
+        
+        if (foundPost) {
+          setPost({
+            ...foundPost,
+            isLiked: foundPost.likes && foundPost.likes.length > 0,
+            likes: foundPost._count?.likes || 0,
+            replies: foundPost._count?.replies || 0,
+          });
+        }
+      }
+
+      // 2. Fetch replies
+      const repliesResponse = await fetch(`${API_BASE_URL}/forum/posts/${postId}/replies`, {
+         headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (repliesResponse.ok) {
+        const repliesData = await repliesResponse.json();
+        
+        const transformReply = (reply) => ({
+          ...reply,
+          isLiked: reply.likes && reply.likes.length > 0,
+          children: reply.children ? reply.children.map(transformReply) : []
+        });
+
+        setReplies(repliesData.map(transformReply));
+      }
+
+    } catch (error) {
+      console.error("Error fetching details:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePostReply = async () => {
+    if (!replyContent.trim()) return;
+
+    setIsPostingReply(true);
+    try {
+      const token = localStorage.getItem("token");
+      //
+      const response = await fetch(`${API_BASE_URL}/forum/posts/${postId}/reply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          content: replyContent,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to post reply");
+      }
+
+      // Clear state and close modal
+      setReplyContent("");
+      setIsReplying(false);
+      
+      // Refresh data to show new reply
+      await fetchData();
+
+    } catch (error) {
+      console.error("Error posting reply:", error);
+      alert("Failed to post reply. Please try again.");
+    } finally {
+      setIsPostingReply(false);
+    }
+  };
+
+  const renderReplies = (replyList) => {
+    return replyList.map((reply) => (
+      <div key={reply.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <ReplyBubble reply={reply} currentUserId={currentUserId} />
+        {reply.children && reply.children.length > 0 && (
+          <div style={{ width: '100%', paddingLeft: '2rem', boxSizing: 'border-box' }}>
+            {renderReplies(reply.children)}
+          </div>
+        )}
+      </div>
+    ));
+  };
 
   if (isLoading) {
     return (
@@ -95,21 +150,6 @@ export default function PostDetailPage() {
       </div>
     );
   }
-
-  // Recursive function to render replies and their children
-  const renderReplies = (replyList) => {
-    return replyList.map((reply) => (
-      <div key={reply.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        <ReplyBubble reply={reply} currentUserId={currentUserId} />
-        {/* Render nested replies if any exist */}
-        {reply.children && reply.children.length > 0 && (
-          <div style={{ width: '100%', paddingLeft: '2rem', boxSizing: 'border-box' }}>
-            {renderReplies(reply.children)}
-          </div>
-        )}
-      </div>
-    ));
-  };
 
   return (
     <div className={styles.page}>
@@ -137,6 +177,49 @@ export default function PostDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Reply FAB (Hidden when replying) */}
+      {!isReplying && (
+        <button 
+          className={styles.replyFab}
+          onClick={() => setIsReplying(true)}
+        >
+          Reply
+        </button>
+      )}
+
+      {/* Reply Composer Modal */}
+      {isReplying && (
+        <div className={styles.overlay} onClick={() => setIsReplying(false)}>
+          <div className={styles.composerCard} onClick={e => e.stopPropagation()}>
+            <h3>Reply to Post</h3>
+            <ThoughtTextarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="Write your reply..."
+              rows={5}
+              disabled={isPostingReply}
+              autoFocus
+            />
+            <div className={styles.actions}>
+              <button 
+                className={`${styles.actionBtn} ${styles.cancelBtn}`}
+                onClick={() => setIsReplying(false)}
+                disabled={isPostingReply}
+              >
+                Cancel
+              </button>
+              <button 
+                className={`${styles.actionBtn} ${styles.postBtn}`}
+                onClick={handlePostReply}
+                disabled={!replyContent.trim() || isPostingReply}
+              >
+                {isPostingReply ? "Posting..." : "Post"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
