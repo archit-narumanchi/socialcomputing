@@ -3,35 +3,41 @@ import { prisma } from '../db';
 import { AuthRequest } from './auth';
 import { z } from 'zod';
 
-// Zod schema to validate that the URL param is a number
+// Validate that courseCode is a string (at least 1 char)
 const paramsSchema = z.object({
-  courseId: z.string().regex(/^\d+$/, "Course ID must be a number"),
+  courseCode: z.string().min(1),
 });
 
-// This middleware checks if a user is enrolled in the course they are trying to access
 export const isEnrolled = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const userId = req.userId;
 
-  // 1. Check if user is authenticated
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // 2. Validate the URL parameter
   const validation = paramsSchema.safeParse(req.params);
   if (!validation.success) {
-    return res.status(400).json({ error: 'Invalid course ID format' });
+    return res.status(400).json({ error: 'Invalid course code format' });
   }
   
-  const { courseId } = validation.data;
+  const { courseCode } = validation.data;
 
   try {
-    // 3. Check if an enrollment record exists
+    // 1. Find the course first
+    const course = await prisma.course.findUnique({
+      where: { courseCode: courseCode },
+    });
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // 2. Check enrollment using the found ID
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
           userId: userId,
-          courseId: parseInt(courseId),
+          courseId: course.id,
         },
       },
     });
@@ -40,7 +46,6 @@ export const isEnrolled = async (req: AuthRequest, res: Response, next: NextFunc
       return res.status(403).json({ error: 'Forbidden: You are not enrolled in this course' });
     }
 
-    // 4. If they are enrolled, proceed to the route
     next();
   } catch (error) {
     console.error('Enrollment middleware error:', error);

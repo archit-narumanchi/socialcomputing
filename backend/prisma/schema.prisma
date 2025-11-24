@@ -18,6 +18,8 @@
       hashedPassword String
       createdAt      DateTime @default(now())
       role           UserRole @default(USER) //
+      coins          Int      @default(100) // Give them 100 coins to start!
+      avatarConfig   Json?    // Stores the current look (e.g. { hat: 'red-cap', color: 'blue' })
 
       // Relations
       enrollments Enrollment[]
@@ -25,6 +27,7 @@
       replies     Reply[]
       likes       Like[]
       memePosts   MemePost[]
+      items       UserItem[] // <-- NEW: Items the user owns
     }
 
     // Course model, pre-seeded with KAIST classes
@@ -131,4 +134,28 @@
     enum UserRole {
       USER
       ADMIN
+    }
+
+    // Items available in the shop
+    model AvatarItem {
+      id          Int        @id @default(autoincrement())
+      name        String
+      category    String     // e.g., "hat", "shirt", "accessory"
+      price       Int
+      imageUrl    String     // URL to the asset
+      
+      owners      UserItem[]
+    }
+
+    // Junction table for items a user has bought
+    model UserItem {
+      id        Int      @id @default(autoincrement())
+      userId    Int
+      itemId    Int
+      purchasedAt DateTime @default(now())
+
+      user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+      item      AvatarItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+      @@unique([userId, itemId]) // Can't buy the same item twice
     }
