@@ -17,14 +17,16 @@ async function resolveCourseId(identifier: string): Promise<number | null> {
 }
 
 // --- Get all posts ---
-router.get('/course/:courseIdentifier/posts', isAuthenticated, async (req: AuthRequest, res) => {
-  const { courseIdentifier } = req.params;
+// FIX: Changed :courseIdentifier to :courseCode to match isEnrolled middleware
+router.get('/course/:courseCode/posts', isAuthenticated, async (req: AuthRequest, res) => {
+  const { courseCode } = req.params; // Changed variable name
   const userId = req.userId;
 
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const courseId = await resolveCourseId(courseIdentifier);
+    // We can still use resolveCourseId just fine
+    const courseId = await resolveCourseId(courseCode);
     if (!courseId) return res.status(404).json({ error: 'Course not found' });
 
     const posts = await prisma.post.findMany({
@@ -35,7 +37,7 @@ router.get('/course/:courseIdentifier/posts', isAuthenticated, async (req: AuthR
           select: {
             id: true,
             username: true,
-            avatarConfig: true, // <-- FETCH AVATAR CONFIG
+            avatarConfig: true,
           },
         },
         likes: {
@@ -55,15 +57,16 @@ router.get('/course/:courseIdentifier/posts', isAuthenticated, async (req: AuthR
 });
 
 // --- Create post ---
-router.post('/course/:courseIdentifier/posts', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
-  const { courseIdentifier } = req.params;
+// FIX: Changed :courseIdentifier to :courseCode
+router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
+  const { courseCode } = req.params; // Changed variable name
   const userId = req.userId!;
   const { content } = req.body;
 
   if (!content) return res.status(400).json({ error: 'Content is required' });
 
   try {
-    const courseId = await resolveCourseId(courseIdentifier);
+    const courseId = await resolveCourseId(courseCode);
     if (!courseId) return res.status(404).json({ error: 'Course not found' });
 
     const newPost = await prisma.post.create({
@@ -77,7 +80,7 @@ router.post('/course/:courseIdentifier/posts', isAuthenticated, isEnrolled, asyn
           select: {
             id: true,
             username: true,
-            avatarConfig: true, // <-- INCLUDE HERE TOO
+            avatarConfig: true,
           },
         },
       },
@@ -110,7 +113,7 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
           select: {
             id: true,
             username: true,
-            avatarConfig: true, // <-- INCLUDE HERE TOO
+            avatarConfig: true,
           },
         },
       },
@@ -136,7 +139,7 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
           select: {
             id: true,
             username: true,
-            avatarConfig: true, // <-- FETCH AVATAR CONFIG
+            avatarConfig: true,
           },
         },
         likes: { where: { userId: userId }, select: { userId: true } },
@@ -147,7 +150,7 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
               select: {
                 id: true,
                 username: true,
-                avatarConfig: true, // <-- AND FOR CHILDREN
+                avatarConfig: true,
               }
             },
             likes: { where: { userId: userId }, select: { userId: true } },
