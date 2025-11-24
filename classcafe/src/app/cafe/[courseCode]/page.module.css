@@ -36,10 +36,10 @@
 .main {
   flex: 1;
   display: flex;
-  flex-direction: column; /* Changed to column to stack bubbles above buttons */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 40px; /* Space between chat bubbles and buttons */
+  gap: 40px;
   width: 100%;
 }
 
@@ -47,15 +47,17 @@
 .previewSection {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px; /* Increased gap to account for avatars */
   width: 100%;
-  max-width: 600px;
+  max-width: 650px;
   padding: 0 24px;
 }
 
 .previewBubbleWrapper {
   display: flex;
   width: 100%;
+  align-items: flex-end; /* Align avatar to bottom of bubble */
+  gap: 12px;
 }
 
 .previewBubbleWrapper.left {
@@ -66,22 +68,43 @@
   justify-content: flex-end;
 }
 
+.previewAvatarContainer {
+  width: 60px;
+  height: 60px;
+  /* border-radius: 50%; */
+  /* background: #fff7e6; */
+  /* border: 2px dashed #d0b58a; */
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* box-shadow: 0 4px 8px rgba(66, 43, 26, 0.1); */
+}
+
+.previewAvatarImg {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
 .previewBubble {
   background: #fff9ee;
   border: 2px solid #e6cba8;
   border-radius: 20px;
-  border-bottom-left-radius: 4px; /* Chat bubble tail effect */
+  border-bottom-left-radius: 4px; 
   padding: 16px 20px;
-  max-width: 80%;
+  max-width: 70%;
   box-shadow: 0 4px 12px rgba(78, 50, 30, 0.1);
   animation: float 3s ease-in-out infinite;
+  position: relative;
 }
 
 .previewBubbleWrapper.right .previewBubble {
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 4px;
   background: #fffdf7;
-  animation-delay: 1.5s; /* Offset animation */
+  animation-delay: 1.5s;
 }
 
 .previewContent {
@@ -160,5 +183,10 @@
   
   .previewContent {
     font-size: 14px;
+  }
+  
+  .previewAvatarContainer {
+    width: 48px;
+    height: 48px;
   }
 }

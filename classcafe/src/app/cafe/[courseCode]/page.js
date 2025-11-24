@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import styles from "./page.module.css";
+import { getAvatarUrl } from "../../../utils/avatarUtils";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -18,6 +20,7 @@ export default function CourseCafe() {
         if (!token) return;
 
         // Fetch all posts for the course
+        // The backend returns them sorted by newest first.
         const response = await fetch(`${API_BASE_URL}/forum/course/${courseCode}/posts`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -28,8 +31,11 @@ export default function CourseCafe() {
           const allPosts = await response.json();
           
           if (allPosts.length > 0) {
-            // Shuffle and pick up to 2 posts
-            const shuffled = [...allPosts].sort(() => 0.5 - Math.random());
+            // 1. Take only the top 5 most recent posts
+            const recentPool = allPosts.slice(0, 5);
+            
+            // 2. Shuffle this smaller pool to pick 2 random ones
+            const shuffled = [...recentPool].sort(() => 0.5 - Math.random());
             setRandomPosts(shuffled.slice(0, 2));
           }
         }
@@ -73,23 +79,54 @@ export default function CourseCafe() {
         {/* Ambient Chat Bubbles */}
         {randomPosts.length > 0 && (
           <div className={styles.previewSection}>
-            {randomPosts.map((post, index) => (
-              <div 
-                key={post.id} 
-                className={`${styles.previewBubbleWrapper} ${index % 2 === 0 ? styles.left : styles.right}`}
-              >
-                <div className={styles.previewBubble}>
-                  <p className={styles.previewContent}>
-                    {post.content.length > 60 
-                      ? post.content.substring(0, 60) + "..." 
-                      : post.content}
-                  </p>
-                  <span className={styles.previewAuthor}>
-                    - {post.user?.username || "Student"}
-                  </span>
+            {randomPosts.map((post, index) => {
+              const isLeft = index % 2 === 0;
+              const avatarUrl = getAvatarUrl(post.user?.avatarConfig);
+
+              return (
+                <div 
+                  key={post.id} 
+                  className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
+                >
+                  {/* Render Avatar FIRST if on the left */}
+                  {isLeft && (
+                    <div className={styles.previewAvatarContainer}>
+                      <Image 
+                        src={avatarUrl} 
+                        alt={`${post.user?.username}'s avatar`}
+                        width={60}
+                        height={60}
+                        className={styles.previewAvatarImg}
+                      />
+                    </div>
+                  )}
+
+                  <div className={styles.previewBubble}>
+                    <p className={styles.previewContent}>
+                      {post.content.length > 60 
+                        ? post.content.substring(0, 60) + "..." 
+                        : post.content}
+                    </p>
+                    <span className={styles.previewAuthor}>
+                      - {post.user?.username || "Student"}
+                    </span>
+                  </div>
+
+                  {/* Render Avatar LAST if on the right */}
+                  {!isLeft && (
+                    <div className={styles.previewAvatarContainer}>
+                      <Image 
+                        src={avatarUrl} 
+                        alt={`${post.user?.username}'s avatar`}
+                        width={60}
+                        height={60}
+                        className={styles.previewAvatarImg}
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
