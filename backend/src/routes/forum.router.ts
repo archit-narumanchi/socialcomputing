@@ -6,11 +6,13 @@ import { Prisma } from '@prisma/client';
 
 const router = Router();
 
-// --- Get all posts for a course ---
+// --- Get all posts for a course (ClassCafe) ---
 // GET /api/forum/course/123/posts
+// Protected by: Must be logged in
 router.get('/course/:courseId/posts', isAuthenticated, async (req: AuthRequest, res) => {
   const { courseId } = req.params;
-  const userId = req.userId!; // Available via isAuthenticated
+  // FIX: Extract userId so we can check if the user liked the posts
+  const userId = req.userId!; 
 
   try {
     const posts = await prisma.post.findMany({
@@ -18,10 +20,10 @@ router.get('/course/:courseId/posts', isAuthenticated, async (req: AuthRequest, 
         courseId: parseInt(courseId),
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'desc', // Show newest posts first
       },
       include: {
-        user: {
+        user: { // Show who wrote the post
           select: {
             id: true,
             username: true,
@@ -32,7 +34,7 @@ router.get('/course/:courseId/posts', isAuthenticated, async (req: AuthRequest, 
           where: { userId: userId },
           select: { userId: true },
         },
-        _count: {
+        _count: { // Get the number of replies and likes
           select: {
             replies: true,
             likes: true,
@@ -47,7 +49,9 @@ router.get('/course/:courseId/posts', isAuthenticated, async (req: AuthRequest, 
   }
 });
 
-// --- Create a new post ---
+// --- Create a new post in a course (ClassCafe) ---
+// POST /api/forum/course/123/posts
+// Protected by: Must be logged in AND enrolled in the course
 router.post('/course/:courseId/posts', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseId } = req.params;
   const userId = req.userId!;
@@ -80,11 +84,13 @@ router.post('/course/:courseId/posts', isAuthenticated, isEnrolled, async (req: 
   }
 });
 
-// --- Reply to a post ---
+// --- Reply to a post (supports nested replies) ---
+// POST /api/forum/posts/:postId/reply
+// Body: { content: "...", parentId: 123 (optional) }
 router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
-  const { content, parentId } = req.body;
+  const { content, parentId } = req.body; // Get parentId from body
 
   if (!content) {
     return res.status(400).json({ error: 'Content is required' });
@@ -96,7 +102,7 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
         content: content,
         userId: userId,
         postId: parseInt(postId),
-        parentId: parentId ? parseInt(parentId) : null,
+        parentId: parentId ? parseInt(parentId) : null, // Link to parent reply if provided
       },
       include: {
         user: {
@@ -114,16 +120,18 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
   }
 });
 
-// --- Get all replies for a post ---
+// --- Get all replies for a post (including nested ones) ---
+// GET /api/forum/posts/:postId/replies
 router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
+  // FIX: Extract userId so we can check if the user liked the replies
   const userId = req.userId!;
 
   try {
     const replies = await prisma.reply.findMany({
       where: {
         postId: parseInt(postId),
-        parentId: null,
+        parentId: null, // Only get top-level replies first
       },
       orderBy: {
         createdAt: 'asc',
@@ -143,12 +151,14 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
         _count: {
           select: {
             likes: true,
-            children: true,
+            children: true, // Count nested replies
           },
         },
+        // Recursively fetch children (nested replies)
         children: {
           include: {
             user: { select: { id: true, username: true } },
+            // Check if THIS user liked the nested reply
             likes: {
                where: { userId: userId },
                select: { userId: true }
@@ -166,11 +176,14 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
 });
 
 // --- Like a Post ---
+// POST /api/forum/posts/456/like
+// Protected by: Must be logged in
 router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
 
   try {
+    // Check if the like already exists
     const existingLike = await prisma.like.findUnique({
       where: {
         userId_postId: {
@@ -181,9 +194,11 @@ router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res
     });
 
     if (existingLike) {
+      // User is "unliking"
       await prisma.like.delete({ where: { id: existingLike.id } });
       res.status(200).json({ message: 'Post unliked' });
     } else {
+      // User is "liking"
       await prisma.like.create({
         data: {
           userId: userId,
@@ -199,6 +214,8 @@ router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res
 });
 
 // --- Like a Reply ---
+// POST /api/forum/replies/789/like
+// Protected by: Must be logged in
 router.post('/replies/:replyId/like', isAuthenticated, async (req: AuthRequest, res) => {
   const { replyId } = req.params;
   const userId = req.userId!;
@@ -214,9 +231,11 @@ router.post('/replies/:replyId/like', isAuthenticated, async (req: AuthRequest, 
     });
 
     if (existingLike) {
+      // User is "unliking"
       await prisma.like.delete({ where: { id: existingLike.id } });
       res.status(200).json({ message: 'Reply unliked' });
     } else {
+      // User is "liking"
       await prisma.like.create({
         data: {
           userId: userId,
