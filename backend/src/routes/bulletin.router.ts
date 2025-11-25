@@ -59,7 +59,9 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    // NOTE: Removed "isTopContributor" check to allow general uploading
+    // --- FIX: Removed the "isTopContributor" check here ---
+    // Any enrolled user can now post.
+
     const newMeme = await prisma.memePost.create({
       data: {
         imageUrl: imageUrl,
