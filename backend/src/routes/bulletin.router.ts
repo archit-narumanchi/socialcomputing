@@ -5,6 +5,7 @@ import { isEnrolled } from '../middleware/enrollment';
 
 const router = Router();
 
+// --- Get all Memes/Notices for a course ---
 // GET /api/bulletin/course/:courseCode/meme
 router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
@@ -18,27 +19,32 @@ router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: 
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    const meme = await prisma.memePost.findFirst({
+    // Fetch ALL memes for the course, newest first
+    const memes = await prisma.memePost.findMany({
       where: {
         courseId: course.id,
       },
       orderBy: { createdAt: 'desc' },
-      include: { user: { select: { username: true } } },
+      include: { 
+        user: { 
+          select: { username: true, avatarConfig: true } 
+        } 
+      },
     });
 
-    res.status(200).json(meme || { message: 'No meme yet this week' });
+    res.status(200).json(memes);
   } catch (error) {
-    console.error('Get meme error:', error);
+    console.error('Get memes error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
+// --- Post a Meme/Notice ---
 // POST /api/bulletin/course/:courseCode/meme
 router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
   const userId = req.userId!;
   const { imageUrl } = req.body;
-  const MEME_COST = 3; // Cost to post a meme
 
   if (!imageUrl) {
     return res.status(400).json({ error: 'Image URL is required' });
@@ -53,49 +59,24 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    const enrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: userId,
-          courseId: course.id,
-        },
+    // --- REMOVED THE CHECK FOR isTopContributor HERE ---
+    
+    const newMeme = await prisma.memePost.create({
+      data: {
+        imageUrl: imageUrl,
+        userId: userId,
+        courseId: course.id,
       },
-    });
-
-    if (!enrollment?.isTopContributor) {
-      return res.status(403).json({ error: 'Only the Top Contributor can post a meme!' });
-    }
-
-    // --- TRANSACTION: Check Balance, Deduct Coins, Create Meme ---
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.findUnique({ where: { id: userId } });
-      
-      if (!user || user.coins < MEME_COST) {
-        throw new Error(`Not enough coins. You need ${MEME_COST} coins to post a meme.`);
+      include: {
+        user: {
+          select: { username: true }
+        }
       }
-
-      // Deduct coins
-      await tx.user.update({
-        where: { id: userId },
-        data: { coins: { decrement: MEME_COST } },
-      });
-
-      // Create Meme
-      return await tx.memePost.create({
-        data: {
-          imageUrl: imageUrl,
-          userId: userId,
-          courseId: course.id,
-        },
-      });
     });
 
-    res.status(201).json(result);
-  } catch (error: any) {
+    res.status(201).json(newMeme);
+  } catch (error) {
     console.error('Post meme error:', error);
-    if (error.message.includes('Not enough coins')) {
-        return res.status(402).json({ error: error.message });
-    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
