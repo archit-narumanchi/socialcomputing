@@ -64,7 +64,7 @@ export default function CourseCafe() {
     router.push(`/cafe/${courseCode}/forum`);
   };
 
-  // --- NEW: Handler to navigate to the post discussion ---
+  // Handler to navigate to the post discussion
   const handleBubbleClick = (postId) => {
     router.push(`/cafe/${courseCode}/forum/post/${postId}`);
   };
@@ -89,8 +89,8 @@ export default function CourseCafe() {
                 <div 
                   key={post.id} 
                   className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
-                  onClick={() => handleBubbleClick(post.id)} // <--- Click handler added
-                  style={{ cursor: "pointer" }}              // <--- Visual cue
+                  onClick={() => handleBubbleClick(post.id)}
+                  style={{ cursor: "pointer" }}
                 >
                   {isLeft && (
                     <div className={styles.previewAvatarContainer}>
@@ -142,8 +142,9 @@ export default function CourseCafe() {
           <button className={styles.cafeButton} onClick={handleForum}>
             Forum
           </button>
+          {/* Updated Label */}
           <button className={styles.cafeButton} onClick={handleNoticeBoard}>
-            Notice Board
+            Meme Board
           </button>
           <button
             className={styles.cafeButton}
