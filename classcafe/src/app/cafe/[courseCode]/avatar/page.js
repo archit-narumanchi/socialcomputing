@@ -8,7 +8,7 @@ import { AVATAR_OPTIONS } from "../../../../utils/avatarUtils";
 import styles from "./page.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
-const DEFAULT_COINS = 100;
+const DEFAULT_COINS = 0;
 
 export default function AvatarPage() {
   const router = useRouter();

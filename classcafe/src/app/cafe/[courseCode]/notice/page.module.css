@@ -1,177 +1,93 @@
 .page {
-  min-height: 100vh;
+  background: #f7e7c3;
+  width: 100vw;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #fff2d4;
-  font-family: var(
-    --font-geist-sans,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif
-  );
   overflow: hidden;
+  position: relative;
 }
 
-/* top-left exit */
-.header {
-  padding: 16px 32px 0;
-}
-
-.backButton {
+/* Back button */
+.exitButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: 12px;
   border: 1px solid #d0b58a;
-  background: #ffffff;
-  color: #422b1a;
-  font-size: 14px;
-  font-weight: 500;
+  background: #fff;
   cursor: pointer;
+  z-index: 10;
 }
 
-.backButton:hover {
-  background: #f5e4c2;
-}
+/* --- BOARD LAYOUT --- */
 
-.main {
-  flex: 1;
+.boardContainer {
+  width: 85vw;
+  height: 85vh;
+  margin: 0 auto;
+  margin-top: 60px;
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px 32px 32px;
 }
 
-/* board background */
-.boardContainer {
-  position: relative;
-  width: 100%;
-  max-width: 1100px;
-  aspect-ratio: 16 / 9;
-}
-
+/* Board fills container */
 .boardImage {
-  object-fit: cover;
-}
-
-/* memes overlay on board */
-.memesWrapper {
-  position: absolute;
-  inset: 8% 10%; /* keep margin inside the board frame */
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  justify-content: center;
-}
-
-/* each meme card */
-.memeCard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 360px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  padding: 10px 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-}
-
-.memeImageWrapper {
-  position: relative;
   width: 100%;
-  padding-top: 75%; /* 4:3 aspect ratio, cleaner for memes */
-  border-radius: 8px;
-  overflow: hidden;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
+/* memes centered on the board */
+.memesRow {
+  position: relative;
+  width: 70%;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  z-index: 2; /* above the board */
+}
+
+/* Meme card styling */
+.memeCard {
+  width: 280px;
+  height: 380px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
 
 .memeImage {
+  width: 100%;
+  height: 240px;
   object-fit: cover;
+  border-radius: 12px;
 }
 
-.memeReported .memeImage {
-  filter: grayscale(1) brightness(0.5);
+.postInfo {
+  font-size: 14px;
+  margin-top: 8px;
 }
 
-/* text + actions */
-.metaRow {
-  font-size: 13px;
-  color: #422b1a;
-}
-
-.postedBy strong {
-  font-weight: 600;
-}
-
-.actionsRow {
+.actions {
   display: flex;
-  gap: 8px;
-  margin-top: 4px;
+  justify-content: space-between;
+  margin-top: 12px;
 }
 
-.likeButton,
-.reportButton {
+.likeButton, .reportButton {
   padding: 6px 12px;
-  border-radius: 999px;
-  border: none;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  border-radius: 12px;
 }
 
-.likeButton {
-  background: #ffffff;
-  border: 1px solid #d0b58a;
-  color: #422b1a;
-}
-
-.likeButtonActive {
-  background: #422b1a;
-  color: #ffe9a5;
-  border-color: #422b1a;
-}
-
-.reportButton {
-  background: #fef2f2;
-  color: #b3261e;
-  border: 1px solid #f3b8b8;
-}
-
-.reportButton:disabled,
-.likeButton:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* stack memes nicely on narrow screens */
-@media (max-width: 768px) {
-  .boardContainer {
-    aspect-ratio: 3 / 4;
-  }
-
-  .memesWrapper {
-    position: absolute;
-    inset: 15% 10%; /* adjust inset so they sit nicely inside the board */
-    display: flex;
-    flex-direction: row; /* ← side by side */
-    justify-content: center; /* ← center horizontally */
-    align-items: center;     /* ← center vertically */
-    gap: 32px;               /* space between memes */
-  }
-
-
-  .memeCard {
-    width: 300px; /* fixed size so two fit nicely */
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.92);
-    border-radius: 12px;
-    padding: 10px 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-  }
+.reported {
+  filter: brightness(0.4);
 }
