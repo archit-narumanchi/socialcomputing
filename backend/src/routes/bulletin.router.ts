@@ -1,5 +1,3 @@
-// backend/src/routes/bulletin.router.ts
-
 import { Router } from 'express';
 import { prisma } from '../db';
 import { isAuthenticated, AuthRequest } from '../middleware/auth';
@@ -40,7 +38,7 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
   const { courseCode } = req.params;
   const userId = req.userId!;
   const { imageUrl } = req.body;
-  const MEME_COST = 3;
+  const MEME_COST = 3; // Cost to post a meme
 
   if (!imageUrl) {
     return res.status(400).json({ error: 'Image URL is required' });
@@ -68,21 +66,21 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
       return res.status(403).json({ error: 'Only the Top Contributor can post a meme!' });
     }
 
-    // --- NEW LOGIC START ---
+    // --- TRANSACTION: Check Balance, Deduct Coins, Create Meme ---
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Check balance
       const user = await tx.user.findUnique({ where: { id: userId } });
+      
       if (!user || user.coins < MEME_COST) {
-        throw new Error(`Not enough coins. You need ${MEME_COST} coins.`);
+        throw new Error(`Not enough coins. You need ${MEME_COST} coins to post a meme.`);
       }
 
-      // 2. Deduct coins
+      // Deduct coins
       await tx.user.update({
         where: { id: userId },
         data: { coins: { decrement: MEME_COST } },
       });
 
-      // 3. Create Meme
+      // Create Meme
       return await tx.memePost.create({
         data: {
           imageUrl: imageUrl,
@@ -91,7 +89,6 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
         },
       });
     });
-    // --- NEW LOGIC END ---
 
     res.status(201).json(result);
   } catch (error: any) {

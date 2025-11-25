@@ -1,5 +1,3 @@
-// classcafe/src/app/cafe/[courseCode]/page.js
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -56,15 +54,16 @@ export default function CourseCafe() {
     router.push(`/cafe/${courseCode}/notifications`);
   };
 
-  const handleNoticeBoard = () => {
-    router.push(`/cafe/${courseCode}/meme`);
+  // Navigates to /notice as requested
+  const handleMemeBoard = () => {
+    router.push(`/cafe/${courseCode}/notice`);
   };
 
   const handleForum = () => {
     router.push(`/cafe/${courseCode}/forum`);
   };
 
-  // --- NEW: Handler to navigate to the post discussion ---
+  // Navigates to specific post discussion
   const handleBubbleClick = (postId) => {
     router.push(`/cafe/${courseCode}/forum/post/${postId}`);
   };
@@ -89,8 +88,8 @@ export default function CourseCafe() {
                 <div 
                   key={post.id} 
                   className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
-                  onClick={() => handleBubbleClick(post.id)} // <--- Click handler added
-                  style={{ cursor: "pointer" }}              // <--- Visual cue
+                  onClick={() => handleBubbleClick(post.id)}
+                  style={{ cursor: "pointer" }}
                 >
                   {isLeft && (
                     <div className={styles.previewAvatarContainer}>
@@ -130,7 +129,6 @@ export default function CourseCafe() {
               );
             })
           ) : (
-            // Placeholder or empty space if no posts
             <div style={{ textAlign: 'center', color: '#a88d70', fontStyle: 'italic' }}>
               (It's quiet in here... be the first to post!)
             </div>
@@ -142,7 +140,8 @@ export default function CourseCafe() {
           <button className={styles.cafeButton} onClick={handleForum}>
             Forum
           </button>
-          <button className={styles.cafeButton} onClick={handleNoticeBoard}>
+          {/* Renamed to Meme Board */}
+          <button className={styles.cafeButton} onClick={handleMemeBoard}>
             Meme Board
           </button>
           <button

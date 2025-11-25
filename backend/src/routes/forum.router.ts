@@ -1,10 +1,7 @@
-// backend/src/routes/forum.router.ts
-
 import { Router } from 'express';
 import { prisma } from '../db';
 import { isAuthenticated, AuthRequest } from '../middleware/auth';
 import { isEnrolled } from '../middleware/enrollment';
-import { Prisma } from '@prisma/client';
 
 const router = Router();
 
@@ -18,7 +15,7 @@ async function resolveCourseId(identifier: string): Promise<number | null> {
   return course ? course.id : null;
 }
 
-// ... [GET /course/:courseCode/posts remains unchanged] ...
+// --- Get all posts ---
 router.get('/course/:courseCode/posts', isAuthenticated, async (req: AuthRequest, res) => {
   const { courseCode } = req.params; 
   const userId = req.userId;
@@ -68,7 +65,6 @@ router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req
     const courseId = await resolveCourseId(courseCode);
     if (!courseId) return res.status(404).json({ error: 'Course not found' });
 
-    // Use transaction to create post AND award coin
     const [newPost, _updatedUser] = await prisma.$transaction([
       prisma.post.create({
         data: {
@@ -86,7 +82,7 @@ router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req
           },
         },
       }),
-      // REWARD: 1 Coin for making a post
+      // Reward 1 coin for every post
       prisma.user.update({
         where: { id: userId },
         data: { coins: { increment: 1 } }
@@ -110,7 +106,6 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
 
   try {
     const newReply = await prisma.$transaction(async (tx) => {
-        // 1. Create the reply
         const reply = await tx.reply.create({
             data: {
                 content: content,
@@ -129,12 +124,12 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
             },
         });
 
-        // 2. Check total replies by user to see if we award a coin
-        // Logic: If total replies (including this one) is even, award 1 coin
+        // Count total replies by user to determine reward
         const replyCount = await tx.reply.count({
             where: { userId: userId }
         });
 
+        // Reward 1 coin if total count is divisible by 2
         if (replyCount % 2 === 0) {
             await tx.user.update({
                 where: { id: userId },
@@ -152,7 +147,7 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
   }
 });
 
-// ... [Get replies endpoint remains unchanged] ...
+// --- Get replies ---
 router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
@@ -211,9 +206,10 @@ router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res
                 data: { userId: userId, postId: parseInt(postId) },
             });
 
-            // REWARD Logic: Count total likes (posts + replies)
+            // Count total likes (posts + replies) for reward
             const likeCount = await tx.like.count({ where: { userId: userId } });
             
+            // Reward 1 coin if total likes is divisible by 3
             if (likeCount % 3 === 0) {
                 await tx.user.update({
                     where: { id: userId },
@@ -225,10 +221,8 @@ router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res
         }
     });
     
-    // Determine status code based on action (created vs deleted)
     const status = result.message === 'Post liked' ? 201 : 200;
     res.status(status).json(result);
-
   } catch (error) {
     console.error('Like post error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -253,9 +247,10 @@ router.post('/replies/:replyId/like', isAuthenticated, async (req: AuthRequest, 
                 data: { userId: userId, replyId: parseInt(replyId) },
             });
 
-            // REWARD Logic: Count total likes (posts + replies)
+            // Count total likes (posts + replies) for reward
             const likeCount = await tx.like.count({ where: { userId: userId } });
 
+            // Reward 1 coin if total likes is divisible by 3
             if (likeCount % 3 === 0) {
                 await tx.user.update({
                     where: { id: userId },
