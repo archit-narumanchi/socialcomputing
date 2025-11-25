@@ -1,3 +1,5 @@
+// classcafe/src/app/cafe/[courseCode]/page.js
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -51,7 +53,7 @@ export default function CourseCafe() {
   };
 
   const handleNotifications = () => {
-    console.log("Notifications for course:", courseCode);
+    router.push(`/cafe/${courseCode}/notifications`);
   };
 
   const handleNoticeBoard = () => {
@@ -60,6 +62,11 @@ export default function CourseCafe() {
 
   const handleForum = () => {
     router.push(`/cafe/${courseCode}/forum`);
+  };
+
+  // --- NEW: Handler to navigate to the post discussion ---
+  const handleBubbleClick = (postId) => {
+    router.push(`/cafe/${courseCode}/forum/post/${postId}`);
   };
 
   return (
@@ -82,6 +89,8 @@ export default function CourseCafe() {
                 <div 
                   key={post.id} 
                   className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
+                  onClick={() => handleBubbleClick(post.id)} // <--- Click handler added
+                  style={{ cursor: "pointer" }}              // <--- Visual cue
                 >
                   {isLeft && (
                     <div className={styles.previewAvatarContainer}>
