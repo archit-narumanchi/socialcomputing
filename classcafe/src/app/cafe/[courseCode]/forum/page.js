@@ -1,7 +1,9 @@
+// fileName: page.js
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { getAvatarSrcById } from "../../../../utils/avatarUtils";
 import Link from "next/link";
 import PostBubble from "../../../../PostBubble";
 import styles from "./page.module.css";
@@ -29,6 +31,7 @@ export default function ForumPage() {
   const [posts, setPosts] = useState([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserAvatarId, setCurrentUserAvatarId] = useState("none"); // NEW STATE
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,6 +40,15 @@ export default function ForumPage() {
       return;
     }
 
+    // ⭐ Load current user's avatar ID
+    const storedAvatarId = localStorage.getItem(`avatar:${courseCode}`);
+    if (storedAvatarId) {
+      setCurrentUserAvatarId(storedAvatarId);
+    } else {
+      setCurrentUserAvatarId("none");
+    }
+
+  // Load user ID
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       setCurrentUserId(Number(storedUserId));
@@ -104,10 +116,7 @@ export default function ForumPage() {
           content: post.content,
           createdAt: post.createdAt,
           user: post.user,
-          // 'likes' from backend is now an array containing the user's ID if they liked it.
-          // We transform this into a boolean 'isLiked'.
           isLiked: post.likes && post.likes.length > 0,
-          // We map the total count to 'likes' for the bubble to display.
           likes: post._count?.likes || 0,
           replies: post._count?.replies || 0,
         }));
@@ -158,6 +167,7 @@ export default function ForumPage() {
                 post={post}
                 courseCode={courseCode}
                 currentUserId={currentUserId}
+                currentUserAvatarId={currentUserAvatarId} // NEW PROP
               />
             ))
           )}

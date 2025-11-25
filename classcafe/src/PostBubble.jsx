@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import styles from "./PostBubble.module.css";
-import { getAvatarUrl } from "./utils/avatarUtils"; // Import the helper
+import { getAvatarUrl } from "./utils/avatarUtils"; 
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -18,7 +18,7 @@ const formatTimestamp = (value) => {
   }).format(date);
 };
 
-export default function PostBubble({ post, courseCode, currentUserId = null, isClickable = true }) {
+export default function PostBubble({ post, courseCode, currentUserId = null, isClickable = true, currentUserAvatarId }) {
   const router = useRouter();
 
   if (!post) return null;
@@ -36,8 +36,14 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
 
   const postClassName = `${styles.post} ${isOwnPost ? styles.postOwn : ""}`;
 
-  // Get the specific avatar URL based on user's config
-  const avatarUrl = getAvatarUrl(user?.avatarConfig);
+  let avatarConfigId;
+  if (isOwnPost && currentUserAvatarId) {
+      avatarConfigId = currentUserAvatarId;
+  } else {
+      avatarConfigId = post.user?.avatarConfig;
+  }
+
+  const avatarUrl = getAvatarUrl(avatarConfigId, 'h');
 
   const handlePostClick = () => {
     if (isClickable && courseCode) {
