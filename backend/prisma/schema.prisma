@@ -18,7 +18,7 @@
       hashedPassword String
       createdAt      DateTime @default(now())
       role           UserRole @default(USER) //
-      coins          Int      @default(100) // Give them 100 coins to start!
+      coins          Int      @default(1) // Give them 1 coin to start!
       avatarConfig   Json?    // Stores the current look (e.g. { hat: 'red-cap', color: 'blue' })
 
       // Relations

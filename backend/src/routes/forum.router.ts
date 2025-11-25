@@ -1,3 +1,5 @@
+// backend/src/routes/forum.router.ts
+
 import { Router } from 'express';
 import { prisma } from '../db';
 import { isAuthenticated, AuthRequest } from '../middleware/auth';
@@ -16,16 +18,14 @@ async function resolveCourseId(identifier: string): Promise<number | null> {
   return course ? course.id : null;
 }
 
-// --- Get all posts ---
-// FIX: Changed :courseIdentifier to :courseCode to match isEnrolled middleware
+// ... [GET /course/:courseCode/posts remains unchanged] ...
 router.get('/course/:courseCode/posts', isAuthenticated, async (req: AuthRequest, res) => {
-  const { courseCode } = req.params; // Changed variable name
+  const { courseCode } = req.params; 
   const userId = req.userId;
 
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    // We can still use resolveCourseId just fine
     const courseId = await resolveCourseId(courseCode);
     if (!courseId) return res.status(404).json({ error: 'Course not found' });
 
@@ -56,10 +56,9 @@ router.get('/course/:courseCode/posts', isAuthenticated, async (req: AuthRequest
   }
 });
 
-// --- Create post ---
-// FIX: Changed :courseIdentifier to :courseCode
+// --- Create post (Reward: 1 Coin) ---
 router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
-  const { courseCode } = req.params; // Changed variable name
+  const { courseCode } = req.params;
   const userId = req.userId!;
   const { content } = req.body;
 
@@ -69,22 +68,31 @@ router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req
     const courseId = await resolveCourseId(courseCode);
     if (!courseId) return res.status(404).json({ error: 'Course not found' });
 
-    const newPost = await prisma.post.create({
-      data: {
-        content: content,
-        userId: userId,
-        courseId: courseId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            avatarConfig: true,
+    // Use transaction to create post AND award coin
+    const [newPost, _updatedUser] = await prisma.$transaction([
+      prisma.post.create({
+        data: {
+          content: content,
+          userId: userId,
+          courseId: courseId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatarConfig: true,
+            },
           },
         },
-      },
-    });
+      }),
+      // REWARD: 1 Coin for making a post
+      prisma.user.update({
+        where: { id: userId },
+        data: { coins: { increment: 1 } }
+      })
+    ]);
+
     res.status(201).json(newPost);
   } catch (error) {
     console.error('Create post error:', error);
@@ -92,7 +100,7 @@ router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req
   }
 });
 
-// --- Reply to post ---
+// --- Reply to post (Reward: 1 Coin per 2 replies) ---
 router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
@@ -101,23 +109,42 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
   if (!content) return res.status(400).json({ error: 'Content is required' });
 
   try {
-    const newReply = await prisma.reply.create({
-      data: {
-        content: content,
-        userId: userId,
-        postId: parseInt(postId),
-        parentId: parentId ? parseInt(parentId) : null,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            avatarConfig: true,
-          },
-        },
-      },
+    const newReply = await prisma.$transaction(async (tx) => {
+        // 1. Create the reply
+        const reply = await tx.reply.create({
+            data: {
+                content: content,
+                userId: userId,
+                postId: parseInt(postId),
+                parentId: parentId ? parseInt(parentId) : null,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatarConfig: true,
+                    },
+                },
+            },
+        });
+
+        // 2. Check total replies by user to see if we award a coin
+        // Logic: If total replies (including this one) is even, award 1 coin
+        const replyCount = await tx.reply.count({
+            where: { userId: userId }
+        });
+
+        if (replyCount % 2 === 0) {
+            await tx.user.update({
+                where: { id: userId },
+                data: { coins: { increment: 1 } }
+            });
+        }
+
+        return reply;
     });
+
     res.status(201).json(newReply);
   } catch (error) {
     console.error('Create reply error:', error);
@@ -125,7 +152,7 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
   }
 });
 
-// --- Get replies ---
+// ... [Get replies endpoint remains unchanged] ...
 router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
@@ -166,45 +193,82 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
   }
 });
 
-// ... (Like endpoints remain unchanged)
+// --- Like Post (Reward: 1 Coin per 3 likes) ---
 router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
   try {
-    const existingLike = await prisma.like.findUnique({
-      where: { userId_postId: { userId: userId, postId: parseInt(postId) } },
+    const result = await prisma.$transaction(async (tx) => {
+        const existingLike = await tx.like.findUnique({
+            where: { userId_postId: { userId: userId, postId: parseInt(postId) } },
+        });
+
+        if (existingLike) {
+            await tx.like.delete({ where: { id: existingLike.id } });
+            return { message: 'Post unliked' };
+        } else {
+            await tx.like.create({
+                data: { userId: userId, postId: parseInt(postId) },
+            });
+
+            // REWARD Logic: Count total likes (posts + replies)
+            const likeCount = await tx.like.count({ where: { userId: userId } });
+            
+            if (likeCount % 3 === 0) {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: { coins: { increment: 1 } }
+                });
+            }
+            
+            return { message: 'Post liked' };
+        }
     });
-    if (existingLike) {
-      await prisma.like.delete({ where: { id: existingLike.id } });
-      res.status(200).json({ message: 'Post unliked' });
-    } else {
-      await prisma.like.create({
-        data: { userId: userId, postId: parseInt(postId) },
-      });
-      res.status(201).json({ message: 'Post liked' });
-    }
+    
+    // Determine status code based on action (created vs deleted)
+    const status = result.message === 'Post liked' ? 201 : 200;
+    res.status(status).json(result);
+
   } catch (error) {
     console.error('Like post error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
+// --- Like Reply (Reward: 1 Coin per 3 likes) ---
 router.post('/replies/:replyId/like', isAuthenticated, async (req: AuthRequest, res) => {
   const { replyId } = req.params;
   const userId = req.userId!;
   try {
-    const existingLike = await prisma.like.findUnique({
-      where: { userId_replyId: { userId: userId, replyId: parseInt(replyId) } },
+    const result = await prisma.$transaction(async (tx) => {
+        const existingLike = await tx.like.findUnique({
+            where: { userId_replyId: { userId: userId, replyId: parseInt(replyId) } },
+        });
+
+        if (existingLike) {
+            await tx.like.delete({ where: { id: existingLike.id } });
+            return { message: 'Reply unliked' };
+        } else {
+            await tx.like.create({
+                data: { userId: userId, replyId: parseInt(replyId) },
+            });
+
+            // REWARD Logic: Count total likes (posts + replies)
+            const likeCount = await tx.like.count({ where: { userId: userId } });
+
+            if (likeCount % 3 === 0) {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: { coins: { increment: 1 } }
+                });
+            }
+
+            return { message: 'Reply liked' };
+        }
     });
-    if (existingLike) {
-      await prisma.like.delete({ where: { id: existingLike.id } });
-      res.status(200).json({ message: 'Reply unliked' });
-    } else {
-      await prisma.like.create({
-        data: { userId: userId, replyId: parseInt(replyId) },
-      });
-      res.status(201).json({ message: 'Reply liked' });
-    }
+
+    const status = result.message === 'Reply liked' ? 201 : 200;
+    res.status(status).json(result);
   } catch (error) {
     console.error('Like reply error:', error);
     res.status(500).json({ error: 'Internal server error' });
