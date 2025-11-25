@@ -1,93 +1,171 @@
 .page {
   background: #f7e7c3;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Back button */
-.exitButton {
+.header {
+  padding: 20px;
   position: absolute;
-  top: 20px;
-  left: 20px;
+  width: 100%;
+  z-index: 20;
+  top: 0;
+  left: 0;
+}
+
+.backButton {
   padding: 8px 16px;
   border-radius: 12px;
   border: 1px solid #d0b58a;
   background: #fff;
   cursor: pointer;
-  z-index: 10;
+  font-weight: 600;
+  color: #4e321e;
 }
 
-/* --- BOARD LAYOUT --- */
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  padding-top: 60px; /* Space for header */
+}
 
 .boardContainer {
-  width: 85vw;
-  height: 85vh;
-  margin: 0 auto;
-  margin-top: 60px;
+  width: 100%;
+  max-width: 1000px;
+  height: 80vh;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Board fills container */
+/* Board Background */
 .boardImage {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill; /* Stretch to fill container */
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 1;
 }
 
-/* memes centered on the board */
-.memesRow {
+/* Scrollable Content Area on top of the board */
+.memesWrapper {
   position: relative;
-  width: 70%;
+  z-index: 2;
+  width: 85%;
+  height: 80%;
+  overflow-y: auto;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 40px;
-  z-index: 2; /* above the board */
+  align-content: flex-start;
+  gap: 24px;
+  padding: 20px;
+  /* Custom Scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #d0b58a transparent;
 }
 
-/* Meme card styling */
 .memeCard {
-  width: 280px;
-  height: 380px;
   background: #ffffff;
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 12px;
+  width: 220px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: rotate(-1deg);
+  transition: transform 0.2s;
+}
+
+.memeCard:nth-child(even) {
+  transform: rotate(1deg);
+}
+
+.memeCard:hover {
+  transform: scale(1.05) rotate(0deg);
+  z-index: 10;
+}
+
+.memeImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .memeImage {
-  width: 100%;
-  height: 240px;
   object-fit: cover;
-  border-radius: 12px;
 }
 
-.postInfo {
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-.actions {
+.metaRow {
+  font-size: 12px;
+  color: #555;
   display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.likeButton, .reportButton {
-  padding: 6px 12px;
-  border-radius: 12px;
+.postedBy {
+  color: #4e321e;
 }
 
-.reported {
-  filter: brightness(0.4);
+.date {
+  font-size: 10px;
+  color: #888;
+  text-align: right;
+}
+
+.loadingText, .emptyText {
+  font-size: 1.2rem;
+  color: #4e321e;
+  font-weight: bold;
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+/* Floating Upload Button */
+.uploadFab {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  background: #e74c3c;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 50;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.uploadFab:hover {
+  transform: translateY(-2px);
+  background: #c0392b;
+}
+
+.uploadFab:active {
+  transform: translateY(0);
+}
+
+.disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
 }
