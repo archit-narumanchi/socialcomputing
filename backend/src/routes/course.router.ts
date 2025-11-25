@@ -5,6 +5,21 @@ import { Prisma, type Course } from '@prisma/client';
 
 const router = Router();
 
+// Helper to resolve Course ID from a param that might be an ID or a Code
+async function resolveCourseId(identifier: string): Promise<number | null> {
+  // 1. Try to parse as ID
+  const id = parseInt(identifier);
+  if (!isNaN(id)) return id;
+
+  // 2. If not a number, try to find by courseCode
+  const course = await prisma.course.findUnique({
+    where: { courseCode: identifier },
+    select: { id: true }
+  });
+  
+  return course ? course.id : null;
+}
+
 // --- Search for Courses ---
 // GET /api/courses/search?q=intro
 router.get('/search', isAuthenticated, async (req: AuthRequest, res) => {
@@ -41,10 +56,11 @@ router.get('/search', isAuthenticated, async (req: AuthRequest, res) => {
   }
 });
 
-// --- Join (Enroll in) a Course by Code ---
-// POST /api/courses/:courseCode/join
-router.post('/:courseCode/join', isAuthenticated, async (req: AuthRequest, res) => {
-  const { courseCode } = req.params;
+// --- Join (Enroll in) a Course ---
+// POST /api/courses/:courseIdentifier/join
+// Accepts either ID (123) or Code (CS101)
+router.post('/:courseIdentifier/join', isAuthenticated, async (req: AuthRequest, res) => {
+  const { courseIdentifier } = req.params;
   const userId = req.userId;
 
   if (!userId) {
@@ -52,20 +68,27 @@ router.post('/:courseCode/join', isAuthenticated, async (req: AuthRequest, res) 
   }
 
   try {
-    // 1. Find the course first using the unique courseCode
+    // 1. Resolve the identifier to an ID
+    const courseId = await resolveCourseId(courseIdentifier);
+
+    if (!courseId) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // 2. Verify the course exists (optional, but good for safety if resolve just parsed an int)
     const course = await prisma.course.findUnique({
-      where: { courseCode: courseCode },
+      where: { id: courseId },
     });
 
     if (!course) {
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    // 2. Create the enrollment using the found ID
+    // 3. Create the enrollment
     const newEnrollment = await prisma.enrollment.create({
       data: {
         userId: userId,
-        courseId: course.id,
+        courseId: courseId,
       },
       include: {
         course: true,
@@ -73,7 +96,6 @@ router.post('/:courseCode/join', isAuthenticated, async (req: AuthRequest, res) 
     });
     res.status(201).json(newEnrollment);
   } catch (error) {
-    // --- FIX 1 (continued): Use Prisma.PrismaClientKnownRequestError ---
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       // Handle specific error for duplicate enrollment
       if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2002') {
