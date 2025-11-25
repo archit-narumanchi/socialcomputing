@@ -57,14 +57,14 @@ export default function CourseCafe() {
   };
 
   const handleNoticeBoard = () => {
-    router.push(`/cafe/${courseCode}/notice`);
+    router.push(`/cafe/${courseCode}/meme`);
   };
 
   const handleForum = () => {
     router.push(`/cafe/${courseCode}/forum`);
   };
 
-  // Handler to navigate to the post discussion
+  // --- NEW: Handler to navigate to the post discussion ---
   const handleBubbleClick = (postId) => {
     router.push(`/cafe/${courseCode}/forum/post/${postId}`);
   };
@@ -89,8 +89,8 @@ export default function CourseCafe() {
                 <div 
                   key={post.id} 
                   className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
-                  onClick={() => handleBubbleClick(post.id)}
-                  style={{ cursor: "pointer" }}
+                  onClick={() => handleBubbleClick(post.id)} // <--- Click handler added
+                  style={{ cursor: "pointer" }}              // <--- Visual cue
                 >
                   {isLeft && (
                     <div className={styles.previewAvatarContainer}>
@@ -142,7 +142,6 @@ export default function CourseCafe() {
           <button className={styles.cafeButton} onClick={handleForum}>
             Forum
           </button>
-          {/* Updated Label */}
           <button className={styles.cafeButton} onClick={handleNoticeBoard}>
             Meme Board
           </button>
