@@ -36,27 +36,30 @@
 .main {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* Changed to row for side-by-side layout */
   align-items: center;
   justify-content: center;
-  gap: 40px;
+  gap: 60px; /* Spacing between the two columns */
   width: 100%;
+  max-width: 1200px; /* Constrain width on huge screens */
+  margin: 0 auto;
+  padding: 0 40px;
 }
 
-/* --- Chat Preview Bubbles --- */
+/* --- Chat Preview Bubbles (Left Side) --- */
 .previewSection {
+  flex: 1; /* Takes available space */
   display: flex;
   flex-direction: column;
-  gap: 24px; /* Increased gap to account for avatars */
-  width: 100%;
-  max-width: 650px;
-  padding: 0 24px;
+  gap: 24px;
+  max-width: 550px; /* Limit width so bubbles don't stretch too far */
+  justify-content: center;
 }
 
 .previewBubbleWrapper {
   display: flex;
   width: 100%;
-  align-items: flex-end; /* Align avatar to bottom of bubble */
+  align-items: flex-end; 
   gap: 12px;
 }
 
@@ -94,7 +97,7 @@
   border-radius: 20px;
   border-bottom-left-radius: 4px; 
   padding: 16px 20px;
-  max-width: 70%;
+  max-width: 100%; /* Allow it to fill the wrapper space */
   box-shadow: 0 4px 12px rgba(78, 50, 30, 0.1);
   animation: float 3s ease-in-out infinite;
   position: relative;
@@ -128,16 +131,18 @@
   50% { transform: translateY(-5px); }
 }
 
-/* --- Existing Button Group --- */
+/* --- Button Group (Right Side) --- */
 .buttonGroup {
+  flex: 0 0 auto; /* Don't shrink */
   display: flex;
   flex-direction: column;
   gap: 20px;
   align-items: center;
+  min-width: 240px;
 }
 
 .cafeButton {
-  min-width: 220px;
+  width: 100%;
   padding: 14px 28px;
   border-radius: 12px;
   border: 2px solid #422b1a;
@@ -147,6 +152,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
 .cafeButton:hover {
@@ -160,7 +166,24 @@
   transform: translateY(-1px);
 }
 
-@media (max-width: 600px) {
+/* Responsive: Stack vertically on smaller screens */
+@media (max-width: 900px) {
+  .main {
+    flex-direction: column; /* Stack them again */
+    gap: 40px;
+    padding: 80px 24px 40px; /* Add top padding to clear header */
+  }
+
+  .previewSection {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .buttonGroup {
+    width: 100%;
+    max-width: 300px;
+  }
+
   .header {
     top: 16px;
     left: 16px;
@@ -172,13 +195,8 @@
   }
 
   .cafeButton {
-    min-width: 180px;
     padding: 12px 24px;
     font-size: 14px;
-  }
-
-  .buttonGroup {
-    gap: 16px;
   }
   
   .previewContent {

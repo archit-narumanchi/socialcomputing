@@ -19,8 +19,6 @@ export default function CourseCafe() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        // Fetch all posts for the course
-        // The backend returns them sorted by newest first.
         const response = await fetch(`${API_BASE_URL}/forum/course/${courseCode}/posts`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -31,10 +29,7 @@ export default function CourseCafe() {
           const allPosts = await response.json();
           
           if (allPosts.length > 0) {
-            // 1. Take only the top 5 most recent posts
             const recentPool = allPosts.slice(0, 5);
-            
-            // 2. Shuffle this smaller pool to pick 2 random ones
             const shuffled = [...recentPool].sort(() => 0.5 - Math.random());
             setRandomPosts(shuffled.slice(0, 2));
           }
@@ -56,7 +51,7 @@ export default function CourseCafe() {
   };
 
   const handleNotifications = () => {
-    router.push(`/cafe/${courseCode}/notifications`);
+    console.log("Notifications for course:", courseCode);
   };
 
   const handleNoticeBoard = () => {
@@ -76,10 +71,10 @@ export default function CourseCafe() {
       </header>
 
       <main className={styles.main}>
-        {/* Ambient Chat Bubbles */}
-        {randomPosts.length > 0 && (
-          <div className={styles.previewSection}>
-            {randomPosts.map((post, index) => {
+        {/* Left Side: Ambient Chat Bubbles */}
+        <div className={styles.previewSection}>
+          {randomPosts.length > 0 ? (
+            randomPosts.map((post, index) => {
               const isLeft = index % 2 === 0;
               const avatarUrl = getAvatarUrl(post.user?.avatarConfig);
 
@@ -88,7 +83,6 @@ export default function CourseCafe() {
                   key={post.id} 
                   className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
                 >
-                  {/* Render Avatar FIRST if on the left */}
                   {isLeft && (
                     <div className={styles.previewAvatarContainer}>
                       <Image 
@@ -103,8 +97,8 @@ export default function CourseCafe() {
 
                   <div className={styles.previewBubble}>
                     <p className={styles.previewContent}>
-                      {post.content.length > 60 
-                        ? post.content.substring(0, 60) + "..." 
+                      {post.content.length > 80 
+                        ? post.content.substring(0, 80) + "..." 
                         : post.content}
                     </p>
                     <span className={styles.previewAuthor}>
@@ -112,7 +106,6 @@ export default function CourseCafe() {
                     </span>
                   </div>
 
-                  {/* Render Avatar LAST if on the right */}
                   {!isLeft && (
                     <div className={styles.previewAvatarContainer}>
                       <Image 
@@ -126,11 +119,23 @@ export default function CourseCafe() {
                   )}
                 </div>
               );
-            })}
-          </div>
-        )}
+            })
+          ) : (
+            // Placeholder or empty space if no posts
+            <div style={{ textAlign: 'center', color: '#a88d70', fontStyle: 'italic' }}>
+              (It's quiet in here... be the first to post!)
+            </div>
+          )}
+        </div>
 
+        {/* Right Side: Menu Buttons */}
         <div className={styles.buttonGroup}>
+          <button className={styles.cafeButton} onClick={handleForum}>
+            Forum
+          </button>
+          <button className={styles.cafeButton} onClick={handleNoticeBoard}>
+            Notice Board
+          </button>
           <button
             className={styles.cafeButton}
             onClick={handleCustomiseAvatar}
@@ -139,12 +144,6 @@ export default function CourseCafe() {
           </button>
           <button className={styles.cafeButton} onClick={handleNotifications}>
             Notifications
-          </button>
-          <button className={styles.cafeButton} onClick={handleNoticeBoard}>
-            Notice Board
-          </button>
-          <button className={styles.cafeButton} onClick={handleForum}>
-            Forum
           </button>
         </div>
       </main>
