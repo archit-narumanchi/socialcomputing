@@ -43,9 +43,43 @@ export const AVATAR_OPTIONS = [
   },
 ];
 
-export const getAvatarUrl = (config) => {
+/**
+ * Dynamically creates the correct avatar source path based on accessory ID and base character type.
+ * @param {string} id - The accessory ID (e.g., "flower1", "none").
+ * @param {'f' | 'h'} baseType - The base character type ('f' for nupjukif, 'h' for nupjukih).
+ * @returns {string} The full image path.
+ */
+const getAvatarSrcPath = (id, baseType = 'f') => {
+    const baseName = `nupjuki${baseType}`;
+    const accessoryId = id || "none"; 
+
+    // 1. If it's the base avatar (id="none"), return the path without any accessory suffix.
+    if (accessoryId === "none") {
+        return `/assets/${baseName}.png`;
+    }
+
+    // 2. Check if the accessory ID is one we know.
+    const option = AVATAR_OPTIONS.find((opt) => opt.id === accessoryId);
+    
+    // 3. If we know the ID, construct the path with the underscore and accessory ID.
+    if (option) {
+        return `/assets/${baseName}_${accessoryId}.png`;
+    }
+    
+    // 4. If the ID is unknown or invalid, fallback to the base image.
+    return `/assets/${baseName}.png`;
+};
+
+
+export const getAvatarUrl = (config, baseType = 'f') => {
   // Handle if config is the JSON object { id: "..." } or just the id string
   const id = config?.id || config || "none";
-  const option = AVATAR_OPTIONS.find((opt) => opt.id === id);
-  return option ? option.avatarSrc : AVATAR_OPTIONS[0].avatarSrc;
+  
+  // Use the new helper function to get the correct URL based on the requested base type
+  return getAvatarSrcPath(id, baseType);
 };
+
+export function getAvatarSrcById(id) {
+  // This function is generally used for the default base ('f')
+  return getAvatarSrcPath(id, 'f');
+}
