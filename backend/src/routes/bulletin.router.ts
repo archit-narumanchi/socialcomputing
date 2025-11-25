@@ -5,6 +5,7 @@ import { isEnrolled } from '../middleware/enrollment';
 
 const router = Router();
 
+// --- Get all Memes/Notices for a course ---
 // GET /api/bulletin/course/:courseCode/meme
 router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
@@ -18,21 +19,27 @@ router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: 
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    const meme = await prisma.memePost.findFirst({
+    // Fetch ALL memes for the course, newest first
+    const memes = await prisma.memePost.findMany({
       where: {
         courseId: course.id,
       },
       orderBy: { createdAt: 'desc' },
-      include: { user: { select: { username: true } } },
+      include: { 
+        user: { 
+          select: { username: true, avatarConfig: true } 
+        } 
+      },
     });
 
-    res.status(200).json(meme || { message: 'No meme yet this week' });
+    res.status(200).json(memes);
   } catch (error) {
-    console.error('Get meme error:', error);
+    console.error('Get memes error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
+// --- Post a Meme/Notice ---
 // POST /api/bulletin/course/:courseCode/meme
 router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
@@ -52,25 +59,18 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    const enrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: userId,
-          courseId: course.id,
-        },
-      },
-    });
-
-    if (!enrollment?.isTopContributor) {
-      return res.status(403).json({ error: 'Only the Top Contributor can post a meme!' });
-    }
-
+    // NOTE: Removed "isTopContributor" check to allow general uploading
     const newMeme = await prisma.memePost.create({
       data: {
         imageUrl: imageUrl,
         userId: userId,
         courseId: course.id,
       },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
     });
 
     res.status(201).json(newMeme);
