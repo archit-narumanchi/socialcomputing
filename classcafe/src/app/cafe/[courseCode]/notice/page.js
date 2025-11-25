@@ -106,13 +106,13 @@ export default function MemeBoardPage() {
 
       <main className={styles.main}>
         <div className={styles.boardContainer}>
-          <Image
-            src="/assets/notice_board.png"
-            alt="Meme board"
+          {/* <Image
+            src="/assets/notice_board.png" 
+            alt="Notice board"
             fill
             priority
             className={styles.boardImage}
-          />
+          /> */}
 
           <div className={styles.memesWrapper}>
             {memes.length === 0 ? (
