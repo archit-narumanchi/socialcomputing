@@ -23,7 +23,7 @@ router.get('/me', isAuthenticated, async (req: AuthRequest, res) => {
     res.status(200).json(user);
   } catch (error) {
     console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal serv    er error' });
   }
 });
 

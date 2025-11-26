@@ -80,12 +80,12 @@ export default function ComposePostPage() {
 
       const data = await response.json();
 
-      // --- UPDATE COINS HERE ---
+      // --- UPDATE COINS SILENTLY ---
       if (data.newCoins !== undefined && userId) {
         localStorage.setItem(`coins:${userId}`, String(data.newCoins));
-        alert(`Post created! (+1 Coin)`);
+        // Alert removed as requested
       }
-      // -------------------------
+      // -----------------------------
 
       router.push(`/cafe/${courseCode}/forum`);
     } catch (err) {

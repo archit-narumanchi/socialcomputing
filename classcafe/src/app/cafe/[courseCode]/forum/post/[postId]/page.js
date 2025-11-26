@@ -19,7 +19,6 @@ export default function PostDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  // New state for reply functionality
   const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [isPostingReply, setIsPostingReply] = useState(false);
@@ -42,7 +41,6 @@ export default function PostDetailPage() {
     try {
       const token = localStorage.getItem("token");
       
-      // 1. Fetch posts to find specific one
       const postsResponse = await fetch(`${API_BASE_URL}/forum/course/${courseCode}/posts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -61,7 +59,6 @@ export default function PostDetailPage() {
         }
       }
 
-      // 2. Fetch replies
       const repliesResponse = await fetch(`${API_BASE_URL}/forum/posts/${postId}/replies`, {
          headers: { Authorization: `Bearer ${token}` },
       });
@@ -110,18 +107,16 @@ export default function PostDetailPage() {
 
       const data = await response.json();
 
-      // --- UPDATE COINS IF AWARDED ---
+      // --- UPDATE COINS SILENTLY ---
       if (data.newCoins !== undefined && data.newCoins !== null && userId) {
         localStorage.setItem(`coins:${userId}`, String(data.newCoins));
-        alert("Reply posted! (+1 Coin for every 2 replies)");
+        // Alert removed as requested
       }
-      // -------------------------------
+      // -----------------------------
 
-      // Clear state and close modal
       setReplyContent("");
       setIsReplying(false);
       
-      // Refresh data to show new reply
       await fetchData();
 
     } catch (error) {
@@ -188,7 +183,6 @@ export default function PostDetailPage() {
         </div>
       </main>
 
-      {/* Reply FAB (Hidden when replying) */}
       {!isReplying && (
         <button 
           className={styles.replyFab}
@@ -198,7 +192,6 @@ export default function PostDetailPage() {
         </button>
       )}
 
-      {/* Reply Composer Modal */}
       {isReplying && (
         <div className={styles.overlay} onClick={() => setIsReplying(false)}>
           <div className={styles.composerCard} onClick={e => e.stopPropagation()}>
