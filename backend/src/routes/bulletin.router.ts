@@ -45,6 +45,7 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
   const { courseCode } = req.params;
   const userId = req.userId!;
   const { imageUrl } = req.body;
+  const MEME_COST = 5;
 
   if (!imageUrl) {
     return res.status(400).json({ error: 'Image URL is required' });
@@ -59,24 +60,43 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    // --- REMOVED THE CHECK FOR isTopContributor HERE ---
-    
-    const newMeme = await prisma.memePost.create({
-      data: {
-        imageUrl: imageUrl,
-        userId: userId,
-        courseId: course.id,
-      },
-      include: {
-        user: {
-          select: { username: true }
+    // Transaction: Check balance, Deduct coins, Create Post
+    const result = await prisma.$transaction(async (tx) => {
+        // 1. Check User Balance
+        const user = await tx.user.findUnique({ where: { id: userId } });
+        if (!user || user.coins < MEME_COST) {
+            throw new Error(`Insufficient coins. Posting a meme costs ${MEME_COST} coins.`);
         }
-      }
+
+        // 2. Deduct Coins
+        await tx.user.update({
+            where: { id: userId },
+            data: { coins: { decrement: MEME_COST } }
+        });
+
+        // 3. Create Meme Post
+        const newMeme = await tx.memePost.create({
+            data: {
+                imageUrl: imageUrl,
+                userId: userId,
+                courseId: course.id,
+            },
+            include: {
+                user: {
+                    select: { username: true }
+                }
+            }
+        });
+
+        return newMeme;
     });
 
-    res.status(201).json(newMeme);
-  } catch (error) {
+    res.status(201).json(result);
+  } catch (error: any) {
     console.error('Post meme error:', error);
+    if (error.message?.includes('Insufficient coins')) {
+        return res.status(403).json({ error: error.message });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
