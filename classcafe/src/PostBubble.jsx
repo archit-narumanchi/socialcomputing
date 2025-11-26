@@ -57,6 +57,7 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
     e.stopPropagation(); 
     
     const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId"); // For keying coins
     if (!token) {
       alert("You need to be logged in to like posts.");
       return;
@@ -82,6 +83,13 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
       if (!response.ok) throw new Error("Failed to update like");
 
       const data = await response.json();
+      
+      // --- SILENT COIN SYNC ---
+      if (data.newCoins !== undefined && userId) {
+        localStorage.setItem(`coins:${userId}`, String(data.newCoins));
+      }
+      // ------------------------
+
       const serverSaysLiked = data.message === "Post liked";
       const serverSaysUnliked = data.message === "Post unliked";
 
@@ -109,7 +117,6 @@ export default function PostBubble({ post, courseCode, currentUserId = null, isC
       style={{ cursor: isClickable ? 'pointer' : 'default' }}
     >
       <div className={styles.avatarColumn}>
-        {/* Render the custom avatar image */}
         <div className={styles.avatarCircle}>
           <Image 
             src={avatarUrl} 

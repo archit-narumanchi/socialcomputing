@@ -16,7 +16,7 @@ async function resolveCourseId(identifier: string): Promise<number | null> {
   return course ? course.id : null;
 }
 
-// Helper to check and reward for likes
+// Helper: Reward author if total likes hit a multiple of 10
 async function checkAndRewardAuthor(authorId: number) {
     const totalLikesReceived = await prisma.like.count({
         where: {
@@ -27,11 +27,15 @@ async function checkAndRewardAuthor(authorId: number) {
         }
     });
 
+    // Log for debugging
+    console.log(`User ${authorId} total likes: ${totalLikesReceived}`);
+
     if (totalLikesReceived > 0 && totalLikesReceived % 10 === 0) {
         await prisma.user.update({
             where: { id: authorId },
             data: { coins: { increment: 1 } }
         });
+        console.log(`Reward triggered for User ${authorId}`);
     }
 }
 
@@ -50,20 +54,9 @@ router.get('/course/:courseCode/posts', isAuthenticated, async (req: AuthRequest
       where: { courseId: courseId },
       orderBy: { createdAt: 'desc' },
       include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            avatarConfig: true,
-          },
-        },
-        likes: {
-          where: { userId: userId },
-          select: { userId: true },
-        },
-        _count: {
-          select: { replies: true, likes: true },
-        },
+        user: { select: { id: true, username: true, avatarConfig: true } },
+        likes: { where: { userId: userId }, select: { userId: true } },
+        _count: { select: { replies: true, likes: true } },
       },
     });
     res.status(200).json(posts);
@@ -74,7 +67,6 @@ router.get('/course/:courseCode/posts', isAuthenticated, async (req: AuthRequest
 });
 
 // --- Create post ---
-// REWARD: 1 Coin per Post
 router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
   const userId = req.userId!;
@@ -86,32 +78,16 @@ router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req
     const courseId = await resolveCourseId(courseCode);
     if (!courseId) return res.status(404).json({ error: 'Course not found' });
 
-    // Transaction: Create post AND increment coin
     const result = await prisma.$transaction(async (tx) => {
         const post = await tx.post.create({
-            data: {
-                content: content,
-                userId: userId,
-                courseId: courseId,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatarConfig: true,
-                    },
-                },
-            },
+            data: { content, userId, courseId },
+            include: { user: { select: { id: true, username: true, avatarConfig: true } } },
         });
-
-        // Award 1 coin and return new balance
         const updatedUser = await tx.user.update({
             where: { id: userId },
             data: { coins: { increment: 1 } },
             select: { coins: true }
         });
-
         return { post, newCoins: updatedUser.coins };
     });
 
@@ -123,7 +99,6 @@ router.post('/course/:courseCode/posts', isAuthenticated, isEnrolled, async (req
 });
 
 // --- Reply to post ---
-// REWARD: 1 Coin for every 2 replies
 router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, res) => {
   const { postId } = req.params;
   const userId = req.userId!;
@@ -133,33 +108,19 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-        // 1. Create Reply
         const newReply = await tx.reply.create({
             data: {
-                content: content,
-                userId: userId,
+                content,
+                userId,
                 postId: parseInt(postId),
                 parentId: parentId ? parseInt(parentId) : null,
             },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatarConfig: true,
-                    },
-                },
-            },
+            include: { user: { select: { id: true, username: true, avatarConfig: true } } },
         });
 
-        // 2. Check total replies by user
-        const replyCount = await tx.reply.count({
-            where: { userId: userId }
-        });
-
+        const replyCount = await tx.reply.count({ where: { userId } });
         let newCoins = null;
 
-        // 3. Award coin if multiple of 2
         if (replyCount > 0 && replyCount % 2 === 0) {
             const updatedUser = await tx.user.update({
                 where: { id: userId },
@@ -168,7 +129,6 @@ router.post('/posts/:postId/reply', isAuthenticated, async (req: AuthRequest, re
             });
             newCoins = updatedUser.coins;
         }
-
         return { reply: newReply, newCoins };
     });
 
@@ -189,24 +149,12 @@ router.get('/posts/:postId/replies', isAuthenticated, async (req: AuthRequest, r
       where: { postId: parseInt(postId), parentId: null },
       orderBy: { createdAt: 'asc' },
       include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            avatarConfig: true,
-          },
-        },
+        user: { select: { id: true, username: true, avatarConfig: true } },
         likes: { where: { userId: userId }, select: { userId: true } },
         _count: { select: { likes: true, children: true } },
         children: {
           include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatarConfig: true,
-              }
-            },
+            user: { select: { id: true, username: true, avatarConfig: true } },
             likes: { where: { userId: userId }, select: { userId: true } },
             _count: { select: { likes: true } }
           }
@@ -227,23 +175,28 @@ router.post('/posts/:postId/like', isAuthenticated, async (req: AuthRequest, res
   try {
     const pId = parseInt(postId);
     const existingLike = await prisma.like.findUnique({
-      where: { userId_postId: { userId: userId, postId: pId } },
+      where: { userId_postId: { userId, postId: pId } },
     });
 
     if (existingLike) {
       await prisma.like.delete({ where: { id: existingLike.id } });
-      res.status(200).json({ message: 'Post unliked' });
+      // Return current coins even on unlike, just to sync
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { coins: true } });
+      res.status(200).json({ message: 'Post unliked', newCoins: user?.coins });
     } else {
       await prisma.like.create({
-        data: { userId: userId, postId: pId },
+        data: { userId, postId: pId },
       });
       
+      // Reward author
       const post = await prisma.post.findUnique({ where: { id: pId }, select: { userId: true } });
       if (post) {
           await checkAndRewardAuthor(post.userId);
       }
 
-      res.status(201).json({ message: 'Post liked' });
+      // Return current coins of the LIKER (in case they liked their own post and got rewarded)
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { coins: true } });
+      res.status(201).json({ message: 'Post liked', newCoins: user?.coins });
     }
   } catch (error) {
     console.error('Like post error:', error);
@@ -258,23 +211,27 @@ router.post('/replies/:replyId/like', isAuthenticated, async (req: AuthRequest, 
   try {
     const rId = parseInt(replyId);
     const existingLike = await prisma.like.findUnique({
-      where: { userId_replyId: { userId: userId, replyId: rId } },
+      where: { userId_replyId: { userId, replyId: rId } },
     });
 
     if (existingLike) {
       await prisma.like.delete({ where: { id: existingLike.id } });
-      res.status(200).json({ message: 'Reply unliked' });
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { coins: true } });
+      res.status(200).json({ message: 'Reply unliked', newCoins: user?.coins });
     } else {
       await prisma.like.create({
-        data: { userId: userId, replyId: rId },
+        data: { userId, replyId: rId },
       });
 
+      // Reward author
       const reply = await prisma.reply.findUnique({ where: { id: rId }, select: { userId: true } });
       if (reply) {
           await checkAndRewardAuthor(reply.userId);
       }
 
-      res.status(201).json({ message: 'Reply liked' });
+      // Return current coins of the LIKER
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { coins: true } });
+      res.status(201).json({ message: 'Reply liked', newCoins: user?.coins });
     }
   } catch (error) {
     console.error('Like reply error:', error);

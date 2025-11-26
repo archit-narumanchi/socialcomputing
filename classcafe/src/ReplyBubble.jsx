@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import styles from "./PostBubble.module.css"; // Reuse PostBubble styles
+import styles from "./PostBubble.module.css"; 
 import { getAvatarUrl } from "./utils/avatarUtils";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
@@ -36,11 +36,11 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
 
   const bubbleClassName = `${styles.post} ${isOwnReply ? styles.postOwn : ""}`;
   
-  // Get specific avatar
   const avatarUrl = getAvatarUrl(user?.avatarConfig);
 
   const handleToggleLike = async () => {
     const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId"); 
     if (!token) {
       alert("You need to be logged in to like replies.");
       return;
@@ -66,6 +66,13 @@ export default function ReplyBubble({ reply, currentUserId = null }) {
       if (!response.ok) throw new Error("Failed to update like");
 
       const data = await response.json();
+
+      // --- SILENT COIN SYNC ---
+      if (data.newCoins !== undefined && userId) {
+        localStorage.setItem(`coins:${userId}`, String(data.newCoins));
+      }
+      // ------------------------
+
       const serverSaysLiked = data.message === "Reply liked";
       const serverSaysUnliked = data.message === "Reply unliked";
 
