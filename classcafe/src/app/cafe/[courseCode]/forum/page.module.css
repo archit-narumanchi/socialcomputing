@@ -23,41 +23,63 @@
   text-decoration: none;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  z-index: 50;
 }
 
+/* --- Main Layout: Row Direction for Sidebar --- */
 .main {
   width: 100%;
-  max-width: 960px;
+  max-width: 1200px; /* Increased width to fit sidebar + posts comfortably */
   display: flex;
+  flex-direction: row; /* Side-by-side layout */
+  align-items: flex-start; /* Align to top */
   justify-content: center;
+  gap: 48px; /* Space between Header and Feed */
 }
 
+/* --- Sticky Sidebar Header --- */
 .courseHeader {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid #e5e7eb;
+  width: 35%;
+  flex-shrink: 0;
+  text-align: left; 
+  
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+  
+  /* Remove old border styles */
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  
+  /* Optional: Add a subtle divider on the right */
+  padding-right: 24px;
+  border-right: 2px solid #e5e7eb; 
 }
 
 .courseTitle {
-  font-size: 32px;
-  font-weight: 600;
+  font-size: 36px;
+  font-weight: 700;
   margin: 0 0 8px 0;
   color: #1a1a1a;
+  line-height: 1.1;
 }
 
 .courseCode {
-  font-size: 18px;
+  font-size: 20px;
   color: #666;
   margin: 0;
+  font-weight: 500;
 }
 
+/* --- Scrollable Feed --- */
 .feed {
+  flex: 1; /* Take up all remaining width */
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
+  max-width: 800px; /* Prevent posts from getting too wide */
   align-items: center;
 }
 
@@ -85,16 +107,38 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  z-index: 50;
+  transition: transform 0.2s;
 }
 
-@media (max-width: 640px) {
+.composeButton:hover {
+  transform: scale(1.05);
+}
+
+/* --- Mobile Responsive --- */
+@media (max-width: 900px) {
+  .main {
+    flex-direction: column; /* Stack vertically on smaller screens */
+    align-items: center;
+    gap: 32px;
+  }
+
+  .courseHeader {
+    width: 100%;
+    position: relative; /* Disable sticky */
+    top: 0;
+    text-align: center; /* Center text again */
+    border-right: none;
+    border-bottom: 2px solid #e5e7eb;
+    padding-right: 0;
+    padding-bottom: 24px;
+  }
+  
+  .courseTitle {
+    font-size: 28px;
+  }
+  
   .page {
-    padding-top: 120px;
-  }
-
-  .backButton {
-    top: 12px;
-    left: 12px;
+    padding-top: 100px;
   }
 }
-
