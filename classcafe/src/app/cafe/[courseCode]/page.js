@@ -4,17 +4,17 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import styles from "./page.module.css";
-// 🛑 CRITICAL IMPORT: Need getAvatarSrcById for current user's avatar
 import { getAvatarUrl, getAvatarSrcById } from "../../../utils/avatarUtils"; 
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
+const DEFAULT_COINS = 2;
 
 export default function CourseCafe() {
   const router = useRouter();
   const { courseCode } = useParams();
   const [randomPosts, setRandomPosts] = useState([]);
-  // ⬅️ NEW STATE: Store the source for the current user's avatar
-  const [currentUserAvatarSrc, setCurrentUserAvatarSrc] = useState(null); 
+  const [currentUserAvatarSrc, setCurrentUserAvatarSrc] = useState(null);
+  const [coins, setCoins] = useState(DEFAULT_COINS);
 
   useEffect(() => {
     const fetchRandomPosts = async () => {
@@ -42,13 +42,23 @@ export default function CourseCafe() {
       }
     };
     
-    // ⬅️ NEW LOGIC: Load current user's avatar from local storage
+    // Load current user's avatar from local storage
     const storedAvatarId = localStorage.getItem(`avatar:${courseCode}`);
     if (storedAvatarId) {
         setCurrentUserAvatarSrc(getAvatarSrcById(storedAvatarId)); 
     } else {
-        // Fallback to a default avatar
         setCurrentUserAvatarSrc(getAvatarSrcById("none"));
+    }
+
+    // Load coins
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      const coinsKey = `coins:${userId}`;
+      const storedCoins = localStorage.getItem(coinsKey);
+      if (storedCoins !== null) {
+        const parsed = Number(storedCoins);
+        if (!Number.isNaN(parsed)) setCoins(parsed);
+      }
     }
 
     fetchRandomPosts();
@@ -74,11 +84,10 @@ export default function CourseCafe() {
     router.push(`/cafe/${courseCode}/forum`);
   };
     
-  const handleClickCompose = () => { // ⬅️ NEW HANDLER: For the bottom-right button
+  const handleClickCompose = () => {
     router.push(`/cafe/${courseCode}/forum/compose`);
   };
 
-  // --- Handler to navigate to the post discussion (existing) ---
   const handleBubbleClick = (postId) => {
     router.push(`/cafe/${courseCode}/forum/post/${postId}`);
   };
@@ -89,106 +98,156 @@ export default function CourseCafe() {
         <button className={styles.exitButton} onClick={handleExit}>
           Leave Cafe
         </button>
+        <div className={styles.coinsDisplay}>
+          <span className={styles.coinIcon}>🪙</span>
+          <span>{coins}</span>
+        </div>
       </header>
 
       <main className={styles.main}>
-        {/* Left Side: Ambient Chat Bubbles (Existing Logic) */}
-        <div className={styles.previewSection}>
-          {randomPosts.length > 0 ? (
-            randomPosts.map((post, index) => {
-              const isLeft = index % 2 === 0;
-              const avatarUrl = getAvatarUrl(post.user?.avatarConfig);
-
-              return (
-                <div 
-                  key={post.id} 
-                  className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
-                  onClick={() => handleBubbleClick(post.id)} 
-                  style={{ cursor: "pointer" }} 
-                >
-                  {isLeft && (
-                    <div className={styles.previewAvatarContainer}>
-                      <Image 
-                        src={avatarUrl} 
-                        alt={`${post.user?.username}'s avatar`}
-                        width={60}
-                        height={60}
-                        className={styles.previewAvatarImg}
-                      />
-                    </div>
-                  )}
-
-                  <div className={styles.previewBubble}>
-                    <p className={styles.previewContent}>
-                      {post.content.length > 80 
-                        ? post.content.substring(0, 80) + "..." 
-                        : post.content}
-                    </p>
-                    <span className={styles.previewAuthor}>
-                      - {post.user?.username || "Student"}
-                    </span>
-                  </div>
-
-                  {!isLeft && (
-                    <div className={styles.previewAvatarContainer}>
-                      <Image 
-                        src={avatarUrl} 
-                        alt={`${post.user?.username}'s avatar`}
-                        width={60}
-                        height={60}
-                        className={styles.previewAvatarImg}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            <div style={{ textAlign: 'center', color: '#a88d70', fontStyle: 'italic' }}>
-              (It's quiet in here... be the first to post!)
+        {/* Door on the left */}
+        <div className={styles.door}>
+          <div className={styles.doorFrame}>
+            <div className={styles.doorPanel}>
+              <div className={styles.doorKnob}></div>
             </div>
-          )}
+            <div className={styles.doorText}>EXIT</div>
+          </div>
         </div>
 
-        {/* Right Side: Menu Buttons (Existing Logic) */}
-        <div className={styles.buttonGroup}>
-          <button className={styles.cafeButton} onClick={handleForum}>
-            Forum
-          </button>
-          <button className={styles.cafeButton} onClick={handleNoticeBoard}>
-            Notice Board
-          </button>
-          <button
-            className={styles.cafeButton}
-            onClick={handleCustomiseAvatar}
-          >
-            Customise Avatar
-          </button>
-          <button className={styles.cafeButton} onClick={handleNotifications}>
-            Notifications
-          </button>
+        {/* Center content area */}
+        <div className={styles.centerContent}>
+          {/* Top boards section */}
+          <div className={styles.boardsSection}>
+            <div className={styles.boardWrapper} onClick={handleNoticeBoard}>
+              <Image 
+                src="/assets/memeboard_new.png" 
+                alt="Meme Board"
+                width={300}
+                height={200}
+                className={styles.boardImage}
+              />
+            </div>
+            <div className={styles.boardWrapper} onClick={handleForum}>
+              <Image 
+                src="/assets/forumboard_new.png" 
+                alt="Forum"
+                width={300}
+                height={200}
+                className={styles.boardImage}
+              />
+            </div>
+          </div>
+
+          {/* Chat bubbles section */}
+          <div className={styles.chatSection}>
+            {randomPosts.length > 0 ? (
+              randomPosts.map((post, index) => {
+                const isLeft = index % 2 === 0;
+                const avatarUrl = getAvatarUrl(post.user?.avatarConfig);
+
+                return (
+                  <div 
+                    key={post.id} 
+                    className={`${styles.chatBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
+                    onClick={() => handleBubbleClick(post.id)} 
+                    style={{ cursor: "pointer" }} 
+                  >
+                    {isLeft && (
+                      <div className={styles.chatAvatarContainer}>
+                        <Image 
+                          src={avatarUrl} 
+                          alt={`${post.user?.username}'s avatar`}
+                          width={60}
+                          height={60}
+                          className={styles.chatAvatarImg}
+                        />
+                      </div>
+                    )}
+
+                    <div className={styles.chatBubble}>
+                      <p className={styles.chatContent}>
+                        {post.content.length > 60 
+                          ? post.content.substring(0, 60) + "..." 
+                          : post.content}
+                      </p>
+                      <span className={styles.chatAuthor}>
+                        - {post.user?.username || "Student"}
+                      </span>
+                    </div>
+
+                    {!isLeft && (
+                      <div className={styles.chatAvatarContainer}>
+                        <Image 
+                          src={avatarUrl} 
+                          alt={`${post.user?.username}'s avatar`}
+                          width={60}
+                          height={60}
+                          className={styles.chatAvatarImg}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className={styles.emptyMessage}>
+                (It's quiet in here... be the first to post!)
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Window on the right */}
+        <div className={styles.window}>
+          <div className={styles.windowFrame}>
+            <div className={styles.windowPanes}>
+              <div className={styles.windowPane}></div>
+              <div className={styles.windowPane}></div>
+              <div className={styles.windowPane}></div>
+              <div className={styles.windowPane}></div>
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* Notification bell in bottom left */}
+      <button 
+        className={styles.notificationButton}
+        onClick={handleNotifications}
+        title="View notifications"
+      >
+        <span className={styles.bellIcon}>🔔</span>
+      </button>
       
-      {/* 🛑 NEW JSX: Fixed Avatar Compose Button in the bottom right */}
+      {/* User avatar with compose bubble in bottom right */}
       {currentUserAvatarSrc && (
+        <div className={styles.userAvatarSection}>
           <button 
-              className={styles.composeAvatarButton} 
-              onClick={handleClickCompose}
-              title="Compose a new post"
+            className={styles.composeBubbleButton} 
+            onClick={handleClickCompose}
+            title="Compose a new post"
           >
-              <div className={styles.composeBubble}>
-                  <span className={styles.composeText}>What are your thoughts...</span>
-              </div>
-              <Image
-                  src={currentUserAvatarSrc} 
-                  alt="Your avatar, click to compose a post"
-                  width={80} 
-                  height={80} 
-                  className={styles.composeAvatarImg}
-                  priority
-              />
+            <div className={styles.composeBubble}>
+              <span className={styles.composeText}>What are your thoughts...</span>
+            </div>
           </button>
+          <button
+            className={styles.avatarButton}
+            onClick={handleCustomiseAvatar}
+            title="Customise your avatar"
+          >
+            <Image
+              src={currentUserAvatarSrc} 
+              alt="Your avatar"
+              width={120} 
+              height={120} 
+              className={styles.userAvatarImg}
+              priority
+            />
+            <div className={styles.youLabel}>YOU</div>
+          </button>
+        </div>
       )}
     </div>
   );
