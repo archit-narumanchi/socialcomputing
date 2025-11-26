@@ -208,3 +208,91 @@
     height: 48px;
   }
 }
+
+.composeAvatarButton {
+    /* Fixed positioning in the bottom right */
+    position: fixed;
+    bottom: 30px; 
+    right: 30px;
+    
+    /* Appearance */
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    z-index: 1000;
+    
+    /* Layout - Changed to row to put bubble on left */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    
+    transition: transform 0.2s ease;
+}
+
+.composeAvatarButton:hover {
+    transform: scale(1.05);
+}
+
+/* Style for the Speech Bubble - matching the chat style */
+.composeBubble {
+    background: #fff9ee;
+    border: 2px solid #e6cba8;
+    border-radius: 20px;
+    border-bottom-right-radius: 4px; /* Pointed corner at bottom right toward avatar */
+    padding: 12px 18px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(78, 50, 30, 0.1);
+    animation: gentleFloat 3s ease-in-out infinite;
+}
+
+@keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+/* Remove the tail since we're using the pointed corner style */
+.composeBubble::after {
+    display: none;
+}
+
+/* Style for the Text inside the bubble */
+.composeText {
+    font-size: 14px;
+    color: #422b1a;
+    opacity: 0.5;
+    white-space: nowrap;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+/* Style for the Avatar Image */
+.composeAvatarImg {
+    width: 160px; 
+    height: 160px; 
+    object-fit: contain;
+    background-color: transparent;
+    flex-shrink: 0; /* Prevent avatar from shrinking */
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .composeAvatarButton {
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .composeBubble {
+        padding: 10px 14px;
+    }
+    
+    .composeText {
+        font-size: 13px;
+    }
+    
+    .composeAvatarImg {
+        width: 60px;
+        height: 60px;
+    }
+}

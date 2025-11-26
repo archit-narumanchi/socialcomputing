@@ -1,12 +1,11 @@
-// classcafe/src/app/cafe/[courseCode]/page.js
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import styles from "./page.module.css";
-import { getAvatarUrl } from "../../../utils/avatarUtils";
+// 🛑 CRITICAL IMPORT: Need getAvatarSrcById for current user's avatar
+import { getAvatarUrl, getAvatarSrcById } from "../../../utils/avatarUtils"; 
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 
@@ -14,6 +13,8 @@ export default function CourseCafe() {
   const router = useRouter();
   const { courseCode } = useParams();
   const [randomPosts, setRandomPosts] = useState([]);
+  // ⬅️ NEW STATE: Store the source for the current user's avatar
+  const [currentUserAvatarSrc, setCurrentUserAvatarSrc] = useState(null); 
 
   useEffect(() => {
     const fetchRandomPosts = async () => {
@@ -40,6 +41,15 @@ export default function CourseCafe() {
         console.error("Error fetching preview posts:", error);
       }
     };
+    
+    // ⬅️ NEW LOGIC: Load current user's avatar from local storage
+    const storedAvatarId = localStorage.getItem(`avatar:${courseCode}`);
+    if (storedAvatarId) {
+        setCurrentUserAvatarSrc(getAvatarSrcById(storedAvatarId)); 
+    } else {
+        // Fallback to a default avatar
+        setCurrentUserAvatarSrc(getAvatarSrcById("none"));
+    }
 
     fetchRandomPosts();
   }, [courseCode]);
@@ -63,8 +73,12 @@ export default function CourseCafe() {
   const handleForum = () => {
     router.push(`/cafe/${courseCode}/forum`);
   };
+    
+  const handleClickCompose = () => { // ⬅️ NEW HANDLER: For the bottom-right button
+    router.push(`/cafe/${courseCode}/forum/compose`);
+  };
 
-  // --- NEW: Handler to navigate to the post discussion ---
+  // --- Handler to navigate to the post discussion (existing) ---
   const handleBubbleClick = (postId) => {
     router.push(`/cafe/${courseCode}/forum/post/${postId}`);
   };
@@ -78,7 +92,7 @@ export default function CourseCafe() {
       </header>
 
       <main className={styles.main}>
-        {/* Left Side: Ambient Chat Bubbles */}
+        {/* Left Side: Ambient Chat Bubbles (Existing Logic) */}
         <div className={styles.previewSection}>
           {randomPosts.length > 0 ? (
             randomPosts.map((post, index) => {
@@ -89,8 +103,8 @@ export default function CourseCafe() {
                 <div 
                   key={post.id} 
                   className={`${styles.previewBubbleWrapper} ${isLeft ? styles.left : styles.right}`}
-                  onClick={() => handleBubbleClick(post.id)} // <--- Click handler added
-                  style={{ cursor: "pointer" }}              // <--- Visual cue
+                  onClick={() => handleBubbleClick(post.id)} 
+                  style={{ cursor: "pointer" }} 
                 >
                   {isLeft && (
                     <div className={styles.previewAvatarContainer}>
@@ -130,14 +144,13 @@ export default function CourseCafe() {
               );
             })
           ) : (
-            // Placeholder or empty space if no posts
             <div style={{ textAlign: 'center', color: '#a88d70', fontStyle: 'italic' }}>
               (It's quiet in here... be the first to post!)
             </div>
           )}
         </div>
 
-        {/* Right Side: Menu Buttons */}
+        {/* Right Side: Menu Buttons (Existing Logic) */}
         <div className={styles.buttonGroup}>
           <button className={styles.cafeButton} onClick={handleForum}>
             Forum
@@ -156,6 +169,27 @@ export default function CourseCafe() {
           </button>
         </div>
       </main>
+      
+      {/* 🛑 NEW JSX: Fixed Avatar Compose Button in the bottom right */}
+      {currentUserAvatarSrc && (
+          <button 
+              className={styles.composeAvatarButton} 
+              onClick={handleClickCompose}
+              title="Compose a new post"
+          >
+              <div className={styles.composeBubble}>
+                  <span className={styles.composeText}>What are your thoughts...</span>
+              </div>
+              <Image
+                  src={currentUserAvatarSrc} 
+                  alt="Your avatar, click to compose a post"
+                  width={80} 
+                  height={80} 
+                  className={styles.composeAvatarImg}
+                  priority
+              />
+          </button>
+      )}
     </div>
   );
 }
