@@ -95,9 +95,6 @@ export default function CourseCafe() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <button className={styles.exitButton} onClick={handleExit}>
-          Leave Cafe
-        </button>
         <div className={styles.coinsDisplay}>
           <span className={styles.coinIcon}>🪙</span>
           <span>{coins}</span>
@@ -106,14 +103,16 @@ export default function CourseCafe() {
 
       <main className={styles.main}>
         {/* Door on the left */}
-        <div className={styles.door}>
-          <div className={styles.doorFrame}>
-            <div className={styles.doorPanel}>
-              <div className={styles.doorKnob}></div>
-            </div>
-            <div className={styles.doorText}>EXIT</div>
-          </div>
-        </div>
+        <button className={styles.doorButton} onClick={handleExit} title="Leave Cafe">
+          <Image
+            src="/assets/door.png"
+            alt="Door - Leave Cafe"
+            width={180}
+            height={300}
+            className={styles.doorImage}
+          />
+          <div className={styles.doorText}>LEAVE CAFE</div>
+        </button>
 
         {/* Center content area */}
         <div className={styles.centerContent}>
@@ -199,15 +198,14 @@ export default function CourseCafe() {
         </div>
 
         {/* Window on the right */}
-        <div className={styles.window}>
-          <div className={styles.windowFrame}>
-            <div className={styles.windowPanes}>
-              <div className={styles.windowPane}></div>
-              <div className={styles.windowPane}></div>
-              <div className={styles.windowPane}></div>
-              <div className={styles.windowPane}></div>
-            </div>
-          </div>
+        <div className={styles.windowWrapper}>
+          <Image
+            src="/assets/window.png"
+            alt="Window"
+            width={180}
+            height={300}
+            className={styles.windowImage}
+          />
         </div>
       </main>
 
