@@ -172,7 +172,7 @@ export default function NoticeBoardPage() {
             disabled={isUploading}
             hidden 
         />
-        {isUploading ? "..." : "Upload (+5 coins)"}
+        {isUploading ? "..." : "Upload"}
       </label>
     </div>
   );
