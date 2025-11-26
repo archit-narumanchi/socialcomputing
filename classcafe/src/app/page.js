@@ -1,3 +1,5 @@
+// fileName: src/app/page.js
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,8 +7,19 @@ import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import AuthModal from "../AuthModal";
 import Image from "next/image";
+import { getCafeSrcById, DEFAULT_CAFE_ID } from "../utils/cafeUtils"; // ☕ NEW IMPORT
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
+
+// ☕ NEW HELPER FUNCTION to load the specific cafe background for a course
+const getCourseCafeSrc = (courseCode) => {
+  if (!courseCode) return getCafeSrcById(DEFAULT_CAFE_ID);
+  
+  const savedCafeId = localStorage.getItem(`cafe:${courseCode}`);
+  return getCafeSrcById(savedCafeId);
+}
+// ----------------------------------------------------------------------
+
 
 export default function Home() {
   const router = useRouter();
@@ -241,7 +254,8 @@ export default function Home() {
                 >
                   <div className={styles.courseButtonContent}>
                     <Image
-                      src="/assets/cafe_default.png"
+                      // 🛑 UPDATED: Use the helper function to get the saved cafe image
+                      src={getCourseCafeSrc(course.courseCode)} 
                       alt="Course cafe"
                       width={160}
                       height={90}
