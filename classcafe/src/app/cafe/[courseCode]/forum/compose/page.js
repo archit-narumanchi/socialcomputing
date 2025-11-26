@@ -35,7 +35,6 @@ export default function ComposePostPage() {
       return;
     }
 
-    // Fetch current user's avatar preference for this course
     const savedId = localStorage.getItem(`avatar:${courseCode}`);
     setMyAvatarUrl(getAvatarUrl(savedId));
 
@@ -50,6 +49,8 @@ export default function ComposePostPage() {
 
     try {
       const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+
       if (!token) {
         setPageError("You need to be logged in to post.");
         setIsPosting(false);
@@ -76,6 +77,15 @@ export default function ComposePostPage() {
           errorData.error || `Failed to post: ${response.statusText}`
         );
       }
+
+      const data = await response.json();
+
+      // --- UPDATE COINS HERE ---
+      if (data.newCoins !== undefined && userId) {
+        localStorage.setItem(`coins:${userId}`, String(data.newCoins));
+        alert(`Post created! (+1 Coin)`);
+      }
+      // -------------------------
 
       router.push(`/cafe/${courseCode}/forum`);
     } catch (err) {
@@ -150,7 +160,6 @@ export default function ComposePostPage() {
           <span className={`${styles.dot} ${styles.dotLarge}`} />
           <span className={`${styles.dot} ${styles.dotMedium}`} />
           <span className={`${styles.dot} ${styles.dotSmall}`} />
-          {/* Render actual avatar image */}
           <div className={styles.avatarCircle} style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
              <Image 
                 src={myAvatarUrl} 

@@ -91,7 +91,8 @@ export default function PostDetailPage() {
     setIsPostingReply(true);
     try {
       const token = localStorage.getItem("token");
-      //
+      const userId = localStorage.getItem("userId");
+
       const response = await fetch(`${API_BASE_URL}/forum/posts/${postId}/reply`, {
         method: "POST",
         headers: {
@@ -106,6 +107,15 @@ export default function PostDetailPage() {
       if (!response.ok) {
         throw new Error("Failed to post reply");
       }
+
+      const data = await response.json();
+
+      // --- UPDATE COINS IF AWARDED ---
+      if (data.newCoins !== undefined && data.newCoins !== null && userId) {
+        localStorage.setItem(`coins:${userId}`, String(data.newCoins));
+        alert("Reply posted! (+1 Coin for every 2 replies)");
+      }
+      // -------------------------------
 
       // Clear state and close modal
       setReplyContent("");
