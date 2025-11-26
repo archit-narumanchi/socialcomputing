@@ -1,42 +1,31 @@
-// fileName: src/app/cafe/[courseCode]/avatar/page.js
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-// --- UPDATED IMPORTS ---
 import { AVATAR_OPTIONS } from "../../../../utils/avatarUtils";
-import { CAFE_OPTIONS, DEFAULT_CAFE_ID, getCafeSrcById } from "../../../../utils/cafeUtils"; // NEW: Only importing CafeUtils
+import { CAFE_OPTIONS, DEFAULT_CAFE_ID, getCafeSrcById } from "../../../../utils/cafeUtils";
 import styles from "./page.module.css";
 
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 const DEFAULT_COINS = 2;
 
-
 // --- UTILITY FUNCTIONS FOR PREVIEW ---
 const getAccessoryOnlySrc = (id) => {
-    // This helper should be imported from avatarUtils if needed, 
-    // but for self-containment, it can remain here.
     const option = AVATAR_OPTIONS.find(opt => opt.id === id);
-    // Assuming accessory images use a specific naming convention
-    // Since accessorySrc is available in AVATAR_OPTIONS:
     return option ? option.accessorySrc : "/assets/accessory_none.png";
 }
-// ---------------------------------------
-
 
 export default function AvatarPage() {
   const router = useRouter();
   const { courseCode } = useParams();
 
   // Customization State
-  const [selectedIndex, setSelectedIndex] = useState(0); // Avatar Index
-  const [selectedCafeId, setSelectedCafeId] = useState(DEFAULT_CAFE_ID); // CAFE ID
+  const [selectedIndex, setSelectedIndex] = useState(0); 
+  const [selectedCafeId, setSelectedCafeId] = useState(DEFAULT_CAFE_ID); 
   
-  // UI State
-  const [activeTab, setActiveTab] = useState("avatar"); // "avatar" or "cafe"
+  const [activeTab, setActiveTab] = useState("avatar"); 
   
   const [isReady, setIsReady] = useState(false);
   const [coins, setCoins] = useState(0);
@@ -46,25 +35,41 @@ export default function AvatarPage() {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    if (!userId) {
+    const token = localStorage.getItem("token");
+
+    if (!userId || !token) {
       setError("You must be logged in to customise your avatar.");
       setIsReady(true);
       return;
     }
 
-    // 1. Load coins
-    const coinsKey = `coins:${userId}`;
-    let startingCoins = DEFAULT_COINS;
-    const storedCoins = localStorage.getItem(coinsKey);
-    if (storedCoins !== null) {
-      const parsed = Number(storedCoins);
-      if (!Number.isNaN(parsed)) startingCoins = parsed;
-    }
-    setCoins(startingCoins);
+    // --- NEW: Fetch latest profile (coins/items) from server ---
+    const fetchUserProfile = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/avatar/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const userData = await res.json();
+                
+                // Update coins state
+                setCoins(userData.coins);
+                // Sync local storage just in case
+                localStorage.setItem(`coins:${userId}`, String(userData.coins));
+
+                // You can also sync items here if you return them from /me
+                // For now, we'll stick to loading unlocked items from localstorage/logic below
+            }
+        } catch (err) {
+            console.error("Failed to fetch user profile", err);
+        }
+    };
+    
+    fetchUserProfile(); // Call the fetch
+    // -----------------------------------------------------------
 
     // 2. Load unlocked accessories/items (Ensure defaults are unlocked)
     const unlockedKey = `unlockedAccessories:${userId}`;
-    // Ensure avatar default ("none") and cafe default are in the list
     let initialUnlocked = ["none", DEFAULT_CAFE_ID]; 
     const rawUnlocked = localStorage.getItem(unlockedKey);
     if (rawUnlocked) {
@@ -92,7 +97,6 @@ export default function AvatarPage() {
         setSelectedCafeId(savedCafeId);
     }
 
-
     setIsReady(true);
   }, [courseCode]);
 
@@ -110,11 +114,9 @@ export default function AvatarPage() {
     const isUnlocked = unlockedIds.includes(option.id) || option.price === 0;
 
     if (isUnlocked) {
-      // Select the item
       if (activeTab === "avatar") {
           setSelectedIndex(index);
       } else if (activeTab === "cafe") { 
-          // 💡 CRITICAL: Update the selected ID immediately to see the change in the preview
           setSelectedCafeId(option.id); 
       }
       return;
@@ -137,11 +139,14 @@ export default function AvatarPage() {
     setUnlockedIds(newUnlocked);
     saveUserState(userId, newCoins, newUnlocked);
     
-    // Select the new item after purchase
+    // Sync new coin balance to server via the existing buy logic or relying on next fetch
+    // Ideally we call the /buy endpoint here, but for this MVP snippet 
+    // we are relying on local logic + sync.
+    // NOTE: To make this fully robust, this function should call the backend /buy endpoint too.
+    
     if (activeTab === "avatar") {
         setSelectedIndex(index);
     } else if (activeTab === "cafe") { 
-        // 💡 CRITICAL: Update the selected ID immediately to see the change in the preview
         setSelectedCafeId(option.id);
     }
     setError("");
@@ -153,15 +158,12 @@ export default function AvatarPage() {
     
     try {
       const selectedAvatar = AVATAR_OPTIONS[selectedIndex];
-      // Find the currently selected cafe object for saving
       const selectedCafe = CAFE_OPTIONS.find(opt => opt.id === selectedCafeId) || CAFE_OPTIONS[0]; 
       const token = localStorage.getItem("token");
 
-      // 1. Save to local storage
       localStorage.setItem(`avatar:${courseCode}`, selectedAvatar.id);
-      localStorage.setItem(`cafe:${courseCode}`, selectedCafe.id); // Save the cafe ID
+      localStorage.setItem(`cafe:${courseCode}`, selectedCafe.id); 
 
-      // 2. Save to Backend (send all configurations)
       const response = await fetch(`${API_BASE_URL}/avatar/equip`, {
         method: "POST",
         headers: {
@@ -171,7 +173,7 @@ export default function AvatarPage() {
         body: JSON.stringify({
           config: { 
               avatarId: selectedAvatar.id, 
-              cafeId: selectedCafe.id // Send the cafe ID
+              cafeId: selectedCafe.id 
           }, 
         }),
       });
@@ -202,31 +204,26 @@ export default function AvatarPage() {
   }
 
   const selectedAvatar = AVATAR_OPTIONS[selectedIndex];
-  // 💡 CRITICAL: Use the helper to get the asset path for the selected cafe ID
   const selectedCafeSrc = getCafeSrcById(selectedCafeId); 
   
   let optionsToShow;
   if (activeTab === "avatar") {
     optionsToShow = AVATAR_OPTIONS;
-  } else { // activeTab === "cafe"
+  } else { 
     optionsToShow = CAFE_OPTIONS; 
   }
   
-  // Logic to determine which image to display in the grid squares
   const getGridImageSrc = (opt) => {
       if (activeTab === "avatar") {
           return getAccessoryOnlySrc(opt.id);
       }
-      // Cafe options use their main assetSrc for the grid image
       return opt.assetSrc;
   };
   
-  // Logic for the main preview image
   const getPreviewImageSrc = () => {
       if (activeTab === "avatar") {
           return selectedAvatar.avatarSrc;
       }
-      // If activeTab is "cafe", show the full background
       return selectedCafeSrc;
   }
   
@@ -236,7 +233,6 @@ export default function AvatarPage() {
       }
       return `Cafe Background: ${selectedCafeId}`;
   }
-
 
   return (
     <div className={styles.page}>
@@ -253,9 +249,8 @@ export default function AvatarPage() {
       <main className={styles.main}>
         <section className={styles.previewSection}>
           <div className={styles.previewContainer}>
-            {/* Consolidated PREVIEW LOGIC: Show Avatar or Cafe Background */}
             <Image
-                src={getPreviewImageSrc()} // 💡 CRITICAL: Call the function to get the current state
+                src={getPreviewImageSrc()} 
                 alt={getPreviewAltText()}
                 width={320}
                 height={480}
@@ -266,7 +261,6 @@ export default function AvatarPage() {
         </section>
 
         <section className={styles.optionsSection}>
-          {/* TAB SELECTOR (Now 2 tabs: Avatar and Cafe) */}
           <div className={styles.tabSelector}>
               <button
                   className={`${styles.tabButton} ${activeTab === "avatar" ? styles.tabActive : ""}`}
@@ -287,7 +281,6 @@ export default function AvatarPage() {
             {optionsToShow.map((opt, index) => {
               const isUnlocked = unlockedIds.includes(opt.id) || opt.price === 0;
              
-              // Determine if this item is currently selected
               const isSelected = activeTab === "avatar" 
                   ? index === selectedIndex 
                   : opt.id === selectedCafeId; 

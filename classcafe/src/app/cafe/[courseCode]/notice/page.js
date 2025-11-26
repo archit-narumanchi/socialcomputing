@@ -8,6 +8,7 @@ import styles from "./page.module.css";
 const API_BASE_URL = "https://classcafe-backend.onrender.com/api";
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmhvmwtmm/image/upload";
 const UPLOAD_PRESET = "classcafe_uploads";
+const MEME_COST = 5; // Define cost constant
 
 export default function NoticeBoardPage() {
   const router = useRouter();
@@ -67,13 +68,22 @@ export default function NoticeBoardPage() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // 1. Show Confirmation Message
+    const confirmed = window.confirm(`Posting a meme costs ${MEME_COST} coins. Do you want to continue?`);
+    if (!confirmed) {
+      e.target.value = null; // Reset input
+      return;
+    }
+
     setIsUploading(true);
     try {
-      // 1. Upload to Cloudinary
+      // 2. Upload to Cloudinary
       const imageUrl = await uploadToCloudinary(file);
 
-      // 2. Send URL to Backend
+      // 3. Send URL to Backend
       const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId"); // Get userId for updating key
+      
       const response = await fetch(`${API_BASE_URL}/bulletin/course/${courseCode}/meme`, {
         method: "POST",
         headers: {
@@ -83,15 +93,21 @@ export default function NoticeBoardPage() {
         body: JSON.stringify({ imageUrl }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        // Read the actual error message from the backend
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.statusText}`);
+        throw new Error(data.error || `Server error: ${response.statusText}`);
       }
 
-      // 3. Refresh list
+      // 4. Update Local Coin Balance!
+      if (data.newCoins !== undefined && userId) {
+        localStorage.setItem(`coins:${userId}`, String(data.newCoins));
+        console.log("Coins updated to:", data.newCoins);
+      }
+
+      // 5. Refresh list
       await fetchMemes();
-      alert("Image posted successfully!");
+      alert(`Image posted successfully! You have ${data.newCoins} coins left.`);
 
     } catch (error) {
       console.error("Upload error:", error);
@@ -116,14 +132,6 @@ export default function NoticeBoardPage() {
 
       <main className={styles.main}>
         <div className={styles.boardContainer}>
-          {/* <Image
-            src="/assets/notice_board.png" 
-            alt="Notice board"
-            fill
-            priority
-            className={styles.boardImage}
-          /> */}
-
           <div className={styles.memesWrapper}>
             {loading ? (
               <div className={styles.loadingText}>Loading memes...</div>
@@ -164,7 +172,7 @@ export default function NoticeBoardPage() {
             disabled={isUploading}
             hidden 
         />
-        {isUploading ? "..." : "Upload"}
+        {isUploading ? "..." : "Upload (+5 coins)"}
       </label>
     </div>
   );

@@ -6,7 +6,6 @@ import { isEnrolled } from '../middleware/enrollment';
 const router = Router();
 
 // --- Get all Memes/Notices for a course ---
-// GET /api/bulletin/course/:courseCode/meme
 router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
 
@@ -19,11 +18,8 @@ router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: 
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    // Fetch ALL memes for the course, newest first
     const memes = await prisma.memePost.findMany({
-      where: {
-        courseId: course.id,
-      },
+      where: { courseId: course.id },
       orderBy: { createdAt: 'desc' },
       include: { 
         user: { 
@@ -40,7 +36,6 @@ router.get('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: 
 });
 
 // --- Post a Meme/Notice ---
-// POST /api/bulletin/course/:courseCode/meme
 router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req: AuthRequest, res) => {
   const { courseCode } = req.params;
   const userId = req.userId!;
@@ -68,10 +63,11 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
             throw new Error(`Insufficient coins. Posting a meme costs ${MEME_COST} coins.`);
         }
 
-        // 2. Deduct Coins
-        await tx.user.update({
+        // 2. Deduct Coins and get updated record
+        const updatedUser = await tx.user.update({
             where: { id: userId },
-            data: { coins: { decrement: MEME_COST } }
+            data: { coins: { decrement: MEME_COST } },
+            select: { coins: true } // Return the new coin count
         });
 
         // 3. Create Meme Post
@@ -88,7 +84,8 @@ router.post('/course/:courseCode/meme', isAuthenticated, isEnrolled, async (req:
             }
         });
 
-        return newMeme;
+        // Return both the meme and the new balance
+        return { meme: newMeme, newCoins: updatedUser.coins };
     });
 
     res.status(201).json(result);
