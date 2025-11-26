@@ -81,6 +81,7 @@
 }
 
 .previewContainer {
+  /* Note: You might need to adjust width/height here if the image sizes are inconsistent. */
   padding: 16px;
   border-radius: 24px;
   background: #fdf6e4;
@@ -88,9 +89,9 @@
 }
 
 .previewImage {
-  width: 260px;
+  width: 320px; /* Adjusted to match 320px in JS */
+  height: 480px; /* Adjusted to match 480px in JS */
   max-width: 30vw;
-  height: auto;
   object-fit: contain;
 }
 
@@ -216,6 +217,38 @@
   margin-top: 8px;
   color: #b3261e;
   font-size: 13px;
+}
+
+/* --- NEW TAB CUSTOMIZATION STYLES --- */
+
+.tabSelector {
+    display: flex;
+    justify-content: center; /* Center the tabs above the grid */
+    margin-bottom: 24px; /* Space before the title */
+    width: 100%;
+}
+
+.tabButton {
+    /* Base Button Styling (matches existing font/color scheme) */
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #a0825e; /* Light brown for inactive tabs */
+    transition: color 0.2s, border-bottom 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+.tabButton:hover {
+    color: #422b1a; /* Darker brown on hover */
+}
+
+.tabActive {
+    color: #422b1a; /* Active tab color */
+    border-bottom: 3px solid #9b5a20; /* Dark brown highlight for active tab */
+    font-weight: 600;
 }
 
 /* Responsive-ish: stack vertically on narrow screens */

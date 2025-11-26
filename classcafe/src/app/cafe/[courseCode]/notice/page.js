@@ -110,7 +110,7 @@ export default function NoticeBoardPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <button onClick={handleExit} className={styles.backButton}>
-          Exit notice board
+          Exit Meme Board
         </button>
       </header>
 
@@ -126,16 +126,16 @@ export default function NoticeBoardPage() {
 
           <div className={styles.memesWrapper}>
             {loading ? (
-              <div className={styles.loadingText}>Loading notices...</div>
+              <div className={styles.loadingText}>Loading memes...</div>
             ) : memes.length === 0 ? (
-              <div className={styles.emptyText}>No notices yet. Post one!</div>
+              <div className={styles.emptyText}>No memes yet. Post one!</div>
             ) : (
               memes.map((meme) => (
                 <div key={meme.id} className={styles.memeCard}>
                   <div className={styles.memeImageWrapper}>
                     <Image
                       src={meme.imageUrl}
-                      alt={`Notice by ${meme.user?.username}`}
+                      alt={`Meme by ${meme.user?.username}`}
                       fill
                       className={styles.memeImage}
                       sizes="(max-width: 768px) 100vw, 300px"

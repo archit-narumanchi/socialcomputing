@@ -12,7 +12,11 @@
   position: absolute;
   top: 24px;
   left: 24px;
+  right: 24px;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .exitButton {
@@ -33,92 +37,198 @@
   transform: translateY(-1px);
 }
 
+.coinsDisplay {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff7e0;
+  border: 2px solid #d0b58a;
+  font-weight: 600;
+  color: #422b1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.coinIcon {
+  font-size: 20px;
+}
+
 .main {
   flex: 1;
   display: flex;
-  flex-direction: row; /* Changed to row for side-by-side layout */
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 60px; /* Spacing between the two columns */
+  gap: 60px;
   width: 100%;
-  max-width: 1200px; /* Constrain width on huge screens */
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 80px 40px 40px;
 }
 
-/* --- Chat Preview Bubbles (Left Side) --- */
-.previewSection {
-  flex: 1; /* Takes available space */
+/* Door styling - left side */
+.door {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 550px; /* Limit width so bubbles don't stretch too far */
+  align-items: center;
+}
+
+.doorFrame {
+  width: 120px;
+  height: 200px;
+  background: #8b5a3c;
+  border: 4px solid #5d3a22;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.doorPanel {
+  width: 100%;
+  height: 100%;
+  background: #a06b47;
+  border-radius: 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.previewBubbleWrapper {
+.doorKnob {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: #ffd700;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.doorText {
+  position: absolute;
+  bottom: -25px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5d3a22;
+  letter-spacing: 1px;
+}
+
+/* Center content area */
+.centerContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  max-width: 800px;
+}
+
+/* Boards section */
+.boardsSection {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.boardWrapper {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.boardWrapper:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.boardImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Chat section */
+.chatSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 600px;
+  align-items: center;
+}
+
+.chatBubbleWrapper {
   display: flex;
   width: 100%;
-  align-items: flex-end; 
+  align-items: flex-end;
   gap: 12px;
 }
 
-.previewBubbleWrapper.left {
+.chatBubbleWrapper.left {
   justify-content: flex-start;
 }
 
-.previewBubbleWrapper.right {
+.chatBubbleWrapper.right {
   justify-content: flex-end;
 }
 
-.previewAvatarContainer {
+.chatAvatarContainer {
   width: 60px;
   height: 60px;
-  /* border-radius: 50%; */
-  /* background: #fff7e6; */
-  /* border: 2px dashed #d0b58a; */
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  /* box-shadow: 0 4px 8px rgba(66, 43, 26, 0.1); */
 }
 
-.previewAvatarImg {
+.chatAvatarImg {
   object-fit: contain;
   width: 100%;
   height: 100%;
 }
 
-.previewBubble {
+.chatBubble {
   background: #fff9ee;
   border: 2px solid #e6cba8;
   border-radius: 20px;
-  border-bottom-left-radius: 4px; 
-  padding: 16px 20px;
-  max-width: 100%; /* Allow it to fill the wrapper space */
+  border-bottom-left-radius: 4px;
+  padding: 12px 16px;
+  max-width: 70%;
   box-shadow: 0 4px 12px rgba(78, 50, 30, 0.1);
   animation: float 3s ease-in-out infinite;
   position: relative;
 }
 
-.previewBubbleWrapper.right .previewBubble {
+.chatBubbleWrapper.right .chatBubble {
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 4px;
   background: #fffdf7;
   animation-delay: 1.5s;
 }
 
-.previewContent {
-  font-size: 15px;
+.chatContent {
+  font-size: 14px;
   color: #422b1a;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   line-height: 1.4;
 }
 
-.previewAuthor {
-  font-size: 12px;
+.chatAuthor {
+  font-size: 11px;
   color: #966e51;
   font-weight: 600;
   font-style: italic;
@@ -126,67 +236,209 @@
   text-align: right;
 }
 
+.emptyMessage {
+  text-align: center;
+  color: #a88d70;
+  font-style: italic;
+  font-size: 14px;
+  padding: 20px;
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
 
-/* --- Button Group (Right Side) --- */
-.buttonGroup {
-  flex: 0 0 auto; /* Don't shrink */
+/* Window styling - right side */
+.window {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.windowFrame {
+  width: 140px;
+  height: 180px;
+  background: #87ceeb;
+  border: 6px solid #5d3a22;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.windowPanes {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  background: #5d3a22;
+}
+
+.windowPane {
+  background: linear-gradient(135deg, #b3d9f2 0%, #87ceeb 50%, #6bb6e0 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Notification button - bottom left */
+.notificationButton {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  background: #fff7e0;
+  border: 2px solid #d0b58a;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notificationButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.bellIcon {
+  font-size: 28px;
+}
+
+/* User avatar section - bottom right */
+.userAvatarSection {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.composeBubbleButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.composeBubbleButton:hover {
+  transform: scale(1.05);
+}
+
+.composeBubble {
+  background: #fff9ee;
+  border: 2px solid #e6cba8;
+  border-radius: 20px;
+  border-top-right-radius: 4px;
+  padding: 10px 16px;
+  box-shadow: 0 4px 12px rgba(78, 50, 30, 0.1);
+  animation: gentleFloat 3s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes gentleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.composeText {
+  font-size: 13px;
+  color: #422b1a;
+  opacity: 0.7;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.avatarButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: 20px;
   align-items: center;
-  min-width: 240px;
+  gap: 4px;
 }
 
-.cafeButton {
-  width: 100%;
-  padding: 14px 28px;
-  border-radius: 12px;
-  border: 2px solid #422b1a;
-  background: #422b1a;
-  color: #fff2d4;
+.avatarButton:hover {
+  transform: scale(1.05);
+}
+
+.userAvatarImg {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  background-color: transparent;
+}
+
+.youLabel {
+  background: #503216;
+  color: #f8edde;
+  padding: 6px 20px;
+  border-radius: 8px;
+  font-weight: 700;
   font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.cafeButton:hover {
-  background: #2f1f12;
-  border-color: #2f1f12;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(66, 43, 26, 0.2);
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .main {
+    gap: 40px;
+  }
+  
+  .boardsSection {
+    gap: 20px;
+  }
+  
+  .boardWrapper {
+    max-width: 200px;
+  }
 }
 
-.cafeButton:active {
-  transform: translateY(-1px);
-}
-
-/* Responsive: Stack vertically on smaller screens */
 @media (max-width: 900px) {
   .main {
-    flex-direction: column; /* Stack them again */
-    gap: 40px;
-    padding: 80px 24px 40px; /* Add top padding to clear header */
+    flex-direction: column;
+    gap: 30px;
+    padding: 80px 24px 40px;
   }
 
-  .previewSection {
+  .door,
+  .window {
+    display: none;
+  }
+
+  .centerContent {
     width: 100%;
     max-width: 100%;
   }
 
-  .buttonGroup {
-    width: 100%;
-    max-width: 300px;
+  .boardsSection {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chatSection {
+    max-width: 100%;
   }
 
   .header {
     top: 16px;
     left: 16px;
+    right: 16px;
   }
 
   .exitButton {
@@ -194,17 +446,51 @@
     font-size: 12px;
   }
 
-  .cafeButton {
-    padding: 12px 24px;
+  .coinsDisplay {
+    padding: 6px 12px;
     font-size: 14px;
   }
-  
-  .previewContent {
-    font-size: 14px;
+
+  .chatContent {
+    font-size: 13px;
   }
-  
-  .previewAvatarContainer {
+
+  .chatAvatarContainer {
     width: 48px;
     height: 48px;
+  }
+
+  .notificationButton {
+    bottom: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .bellIcon {
+    font-size: 24px;
+  }
+
+  .userAvatarSection {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .composeBubble {
+    padding: 8px 12px;
+  }
+
+  .composeText {
+    font-size: 12px;
+  }
+
+  .userAvatarImg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .youLabel {
+    padding: 4px 16px;
+    font-size: 14px;
   }
 }
