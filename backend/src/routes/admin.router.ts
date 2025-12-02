@@ -12,7 +12,7 @@ const router = Router();
 const courseSchema = z.object({
   courseCode: z.string().min(3),
   title: z.string().min(5),
-  semester: z.string().min(3),
+  // semester: z.string().min(3),
 });
 
 // --- Create a new Course (ClassCafe) ---
@@ -27,14 +27,14 @@ router.post('/courses', isAuthenticated, isAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid data', details: validation.error.issues });
     }
 
-    const { courseCode, title, semester } = validation.data;
+    const { courseCode, title} = validation.data;
 
     // 2. Create the new course
     const newCourse = await prisma.course.create({
       data: {
         courseCode,
         title,
-        semester,
+        // semester,
       },
     });
 

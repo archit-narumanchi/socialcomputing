@@ -35,7 +35,7 @@
       id         Int      @id @default(autoincrement())
       courseCode String   @unique // e.g., "CS350"
       title      String   // e.g., "Intro to Software Engineering"
-      semester   String   // e.g., "Fall 2025"
+      // semester   String  e.g., "Fall 2025"
       createdAt  DateTime @default(now())
 
       // Relations

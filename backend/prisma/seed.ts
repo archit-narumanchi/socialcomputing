@@ -16,32 +16,32 @@ const coursesToSeed = [
   {
     courseCode: 'CS101',
     title: 'Introduction to Programming',
-    semester: 'Fall 2025',
+    //semester: 'Fall 2025',
   },
   {
     courseCode: 'CS311',
     title: 'Computer Organization',
-    semester: 'Fall 2025',
+    //semester: 'Fall 2025',
   },
   {
     courseCode: 'BTM238',
     title: 'Organizational Behavior',
-    semester: 'Fall 2025',
+    //semester: 'Fall 2025',
   },
   {
     courseCode: 'CS473',
     title: 'Introduction to Social Computing',
-    semester: 'Fall 2025',
+    //semester: 'Fall 2025',
   },
   {
     courseCode: 'CS485',
     title: 'Machine Learning for Computer Vision',
-    semester: 'Fall 2025',
+    //semester: 'Fall 2025',
   },
   {
     courseCode: 'BTM204',
     title: 'Technology Management',
-    semester: 'Fall 2025',
+    //semester: 'Fall 2025',
   },
 ];
 
