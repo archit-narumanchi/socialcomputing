@@ -65,7 +65,7 @@
 }
 
 .doorImage {
-  width: 180px;
+  width: 180px; /* Explicit width to prevent expansion */
   height: auto;
   object-fit: contain;
   background: transparent;
@@ -104,6 +104,9 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* FIX: Add explicit width here so it doesn't default to image intrinsic size */
+  width: 300px; 
+  max-width: 100%;
 }
 
 .boardWrapper:hover {
@@ -217,7 +220,8 @@
 
 .windowImage {
   display: block;
-  width: auto;
+  /* FIX: Change from 'auto' to specific width to match design intent */
+  width: 180px; 
   height: auto;
   object-fit: contain;
 }
@@ -344,7 +348,7 @@
   }
   
   .boardWrapper {
-    max-width: 200px;
+    width: 200px; /* Adjust wrapper width for tablet */
   }
 }
 
